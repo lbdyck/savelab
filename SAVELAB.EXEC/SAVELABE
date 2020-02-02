@@ -1,0 +1,33 @@
+/* --------------------  rexx procedure  -------------------- *
+ | Name:      SaveLabE                                        |
+ |                                                            |
+ | Function:  ISPF Edit Macro to Save all Labels and then     |
+ |            Save the member and End the Edit Session.       |
+ |                                                            |
+ | Dependencies:  Enabled as an ALIAS of END when the         |
+ |                SAVELAB macro is used to save or restore    |
+ |                labels.                                     |
+ |                                                            |
+ | Author:    Lionel B. Dyck                                  |
+ |                                                            |
+ | History:  (most recent on top)                             |
+ |            08/31/18 - Creation                             |
+ |                                                            |
+ * ---------------------------------------------------------- */
+  Address ISREDIT
+  "MACRO"
+
+/* -------------------------------------- *
+ | Invoke Savelab Save to save all labels |
+ * -------------------------------------- */
+  "SaveLab Save"
+/* ------------------- *
+ | Now Save the Member |
+ * ------------------- */
+ '(chgst) = data_changed'
+  if chgst = 'YES' then 'SAVE'
+
+/* ---------------------------------- *
+ | And then End the ISPF Edit Session |
+ * ---------------------------------- */
+  "BUILTIN END"

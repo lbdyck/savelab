@@ -1,0 +1,22 @@
+/* --------------------  rexx procedure  -------------------- *
+ | Name:      SAVELBLF                                        |
+ |                                                            |
+ | Function:  Fixup the SAVELAB ISPF Profile Variable         |
+ |            to change use of # to % as a # may be a         |
+ |            valid character in a member name.               |
+ |                                                            |
+ | Syntax:    %savelblf                                       |
+ |                                                            |
+ | Usage Notes: MUST be run under each ISPF Applid where      |
+ |              SAVELAB variable savelbl may be.              |
+ |                                                            |
+ | Author:    Lionel B. Dyck                                  |
+ |                                                            |
+ | History:  (most recent on top)                             |
+ |            09/04/18 - Creation                             |
+ |                                                            |
+ * ---------------------------------------------------------- */
+  address ispexec
+  'vget (savelbl) profile'
+  savelbl = translate(savelbl,'%','#')
+  'vput (savelbl) profile'

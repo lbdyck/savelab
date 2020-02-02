@@ -1,0 +1,29 @@
+)Attr
+ $ type(input) hilite(uscore) caps(on)
+ @ type(output)
+ + type(text) skip(on) intens(low)
+)Body Expand(\\)
++---\-\%Saved Label Dataset(Members)+\-\-
+%Command ===>_zcmd            \ \             %Scroll:$zcsr+
++
++Line:%S+Select%D+Delete%U+Use
++
++S  +Dataset(member)                                           +Date
+)Model
+$z+@z                                                          @z
+)Init
+ .zvars = '(zsel dsnmem lastdate)'
+ &zcsr = 'CSR'
+)Proc
+ ver (&zsel,list,S,D,U)
+ IF (&ZCMD = &Z)
+     if (&ztdsels = 0000)
+        &row = .csrrow
+        if (&row ^= 0)
+            if (&zsel = &z)
+                &zsel = S
+     if (&ztdsels ^= 0000)
+          &row = &z
+     if (&row = 0)
+        &zsel = &Z
+)End

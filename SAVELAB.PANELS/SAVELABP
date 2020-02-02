@@ -1,0 +1,18 @@
+)Attr
+ $ type(input) hilite(uscore) caps(on)
+ @ type(output)
+ # type(output) caps(off) intens(low)
+ { type(output) pas(on) intens(low)  hilite(uscore) caps(off)
+ } type(output) pas(on) intens(high)  hilite(uscore) caps(off)
+)Body Window(58,5)
++Delete saved labels for:
+@dsnmem
++
++Confirm:$z+(%Y+or%A+to turn off confirmation
++or%F3+to Cancel Deletion.
+)Init
+ .zvars = '(confirm)'
+ &zwinttl = 'Confirm Deletion'
+)Proc
+ ver (&confirm,nb,list,Y,A)
+)End

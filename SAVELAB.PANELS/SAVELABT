@@ -1,0 +1,39 @@
+)Attr
+ $ type(input) hilite(uscore) caps(on)
+ @ type(output)
+ # type(output) caps(off) intens(low)
+ { type(output) pas(on) intens(low)  hilite(uscore) caps(off)
+ } type(output) pas(on) intens(high)  hilite(uscore) caps(off)
+)Body Window(60,16)
+%Command ===>_zcmd                            %Scroll:$zcsr+
++
++Command:}Sort+(Label)}SortR+(Record) Select:%S+or%Enter+
++S  {Lab  {Rec   +Data
+)Model
+$z+@z     @z     #data
+)Init
+ &lab = 'Label'
+ &sort = 'Sort'
+ &sortr = 'SortR'
+ &rec = 'Record'
+ .zvars = '(ssel label record)'
+ &zwinttl = 'Active Edit Labels'
+ .help = savelabt
+)Proc
+ ver (&ssel,list,S)
+ IF (&ZCMD = &Z)
+     if (&ztdsels = 0000)
+        &row = .csrrow
+        if (&row ^= 0)
+            if (&ssel = &z)
+                &ssel = S
+     if (&ztdsels ^= 0000)
+          &row = &z
+     if (&row = 0)
+        &ssel = &Z
+)Pnts
+ Field(lab )  var(zcmd) val(SORT)
+ Field(sort)  var(zcmd) val(SORT)
+ Field(sortr)  var(zcmd) val(SORTR)
+ Field(rec ) var(zcmd) val(SORTR)
+)End

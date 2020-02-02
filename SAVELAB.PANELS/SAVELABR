@@ -1,0 +1,16 @@
+)Attr
+ @ type(output) intens(low)
+ } type(output) intens(low) just(right)
+)Body Window(60,16)
+%Command ===>_zcmd                            %Scroll:_zcsr+
++
+@dsnmem
++
+%Label  Record #
+)Model
+@z     }z     +
+)Init
+ .zvars = '(label record)'
+ &zwinttl = 'Saved Labels'
+)Proc
+)End

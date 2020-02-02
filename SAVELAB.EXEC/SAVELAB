@@ -1,0 +1,766 @@
+  /* --------------------  rexx procedure  -------------------- */
+  ver = "2.00"
+  /* Name:      SAVELAB                                         *
+  *                                                            *
+  * Type:      ISPF Edit Macro                                 *
+  *                                                            *
+  * Function:  Save, Restore, or List Labels for an ISPF Edit  *
+  *            member.                                         *
+  *                                                            *
+  *            Or List all existing labels in the data.        *
+  *            - thanks to Alex B.                             *
+  *                                                            *
+  *            This is accomplished by saving the label and    *
+  *            associated line numbers in a row in an ISPF     *
+  *            Table that is stored in the user ISPPROF PDS.   *
+  *                                                            *
+  *            When the SAVELAB is called it will define an    *
+  *            alias to the END/PF3 commands to call the       *
+  *            SAVELABE exec to save all active labels for     *
+  *            the current member prior to ending the ISPF     *
+  *            Edit session.                                   *
+  *                                                            *
+  *            Along with SAVELABE an alias for SAVE will be   *
+  *            defined for SAVELABS so any overt SAVE will     *
+  *            also save all the active labels.                *
+  *                                                            *
+  *            During a Restore (SAVELAB with no option) and   *
+  *            an Import the code checks the number of records *
+  *            in the current member with the number of        *
+  *            records when a SAVELAB Save or EXport were      *
+  *            performed. If different then a warning message  *
+  *            is generated as the labels may not be restored  *
+  *            to the correct record locations.                *
+  *                                                            *
+  * Syntax:    %SAVELAB option                                 *
+  *                                                            *
+  *            option may be:                                  *
+  *            blank    - restore saved labels (default)       *
+  *                       of this member                       *
+  *            EXPORT   - export the label set to a pds        *
+  *            HELP     - show help info (alias is ?)          *
+  *            IMAC     - Like Quiet but if no saved labels    *
+  *                       will not enable automatic saving     *
+  *                       ** Ideal use in an Initial Macro     *
+  *            IMPORT   - import the label set from a pds      *
+  *            LIST     - Selection list of active labels      *
+  *            QUIET    - do not report if no labels avail     *
+  *                       but will enable automatic saving     *
+  *            SAVE     - save all labels                      *
+  *            SHOW     - alias of LIST                        *
+  *            SHOW ALL - display the ISPF table               *
+  *                                                            *
+  *            Abbreviations:                                  *
+  *            E        - Export dsn                           *
+  *            H        - Help                                 *
+  *            I        - Import dsn                           *
+  *            IM       - IMAC                                 *
+  *            L        - List active labels selection table   *
+  *            Q        - Quiet                                *
+  *            S        - Save                                 *
+  *            SH       - SHOW                                 *
+  *            SH A     - SHOW ALL                             *
+  *                                                            *
+  * Processing:                                                *
+  *            The labels for a dataset(member) are saved in   *
+  *            a row in the SAVELAB Table in the ISPPROF PDS.  *
+  *            Each dataset(member) is added to this table     *
+  *            in its own row variables.                       *
+  *                                                            *
+  *            Use SHOW ALL to view a table list of all saved  *
+  *            entries in the ISPF Table.                      *
+  *                                                            *
+  *            Export and Import require a PDS data set name   *
+  *            be provided. The member used will be the        *
+  *            member name of the active member.               *
+  *                                                            *
+  *            If the PDS does not exist it will be allocated. *
+  *                                                            *
+  *            An Export will force a SAVELAB Save before      *
+  *            doing an export.                                *
+  *                                                            *
+  * Notes:  1. If the ISPF Session abnormally terminates the   *
+  *            updates may not be saved in the table.          *
+  *         2. This code may be installed using a different    *
+  *            name if SAVELAB is too long (e.g. SL)           *
+  *            - if you do that then you MUST rename the       *
+  *              SAVELABE code which calls SAVELAB.            *
+  *            ** When SAVELAB is used the 1st time to restore *
+  *              it defines an alias of SL for SAVELAB         *
+  *         3. All members/labels info is saved in a table     *
+  *            in the users ISPF Profile dataset.              *
+  *         4. The same member in different data sets MAY be   *
+  *            processed with No Conflicts.                    *
+  *         5. Using the ISPF Compare, and some other tools,   *
+  *            can insert additional labels that you may not   *
+  *            want to save - just beware.                     *
+  *                                                            *
+  * Author:    Lionel B. Dyck                                  *
+  *                                                            *
+  * History:                                                   *
+  *            02/01/20 - 2.00 by Lionel Dyck                  *
+  *                     - Convert from storing in the profile  *
+  *                       to a unique ISPF Table               *
+  *                     - Replaced LIST and SHOW with LISTS    *
+  *                     - Removed  FREE                        *
+  *                     - Add Quiet and IMAC                   *
+  *                     - Add SL as an alias                   *
+  *                     - Add U (use) in showall table to use  *
+  *                       the selected labels in active member *
+  *            01/24/20 - 1.26 by Lionel Dyck                  *
+  *                     - Invoke LS after label restore        *
+  *            01/12/20 - 1.25 by Lionel Dyck                  *
+  *                     - Enhance LS panel for sort            *
+  *            01/11/20 - 1.24 by Lionel Dyck                  *
+  *                     - Create LS - selection list of active *
+  *                       labels. Select and jump to.          *
+  *            01/10/20 - 1.23 by Lionel Dyck                  *
+  *                     - Add code from Alex Brodsky to List   *
+  *                       all active labels                    *
+  *            09/07/18 - 1.22 by Lionel Dyck                  *
+  *                     - Change Export allocation to PDSE     *
+  *                       from a PDS                           *
+  *                     - Add WHY option (thx JK)              *
+  *            09/06/18 - 1.21 by Lionel Dyck                  *
+  *                     - Tutorial and Comment clean up        *
+  *                     - Correct display for Import records   *
+  *            09/05/18 - 1.20 by Lionel Dyck                  *
+  *                     - Report on Import if the member       *
+  *                       record count is differnt from the    *
+  *                       import                               *
+  *                     - Add to save label set the rec count  *
+  *                       and compare on restore and import    *
+  *                       to alert the user the labels may be  *
+  *                       off is different                     *
+  *            09/05/18 - 1.19 by Lionel Dyck                  *
+  *                     - Update Define Alias to occur in      *
+  *                       both Restore and Save actions        *
+  *            09/04/18 - 1.18 by Lionel Dyck                  *
+  *                     - Add Export and Import                *
+  *            09/04/18 - 1.17 by Lionel Dyck                  *
+  *                     - Add FREE # to free a saved label set *
+  *                     - Add Show Sum to show summary of saved*
+  *                       label sets for use with FREE #       *
+  *            09/04/18 - 1.16 by Lionel Dyck                  *
+  *                     - Convert all SETMSG to msglines       *
+  *                     - Change from using # to % as the sep  *
+  *            09/01/18 - 1.15 by Lionel Dyck                  *
+  *                     - Sort show all records                *
+  *                     - Cleanup messages and make alias for  *
+  *                       ERASE ERA instead of E (too short)   *
+  *            08/31/18 - 1.14 by Lionel Dyck                  *
+  *                     - add during save and restore an alias *
+  *                       for the ISPF Edit END to SAVELABE    *
+  *            08/31/18 - 1.13 by Lionel Dyck                  *
+  *                     - add total variable size in show all  *
+  *            08/30/18 - 1.12 by Lionel Dyck                  *
+  *                     - usability improvements               *
+  *                       - allow command abbreviations        *
+  *                     - message improvements                 *
+  *            08/29/18 - 1.11 by Lionel Dyck                  *
+  *                     - strip label before saving (thx TW)   *
+  *            08/29/18 - 1.10 by Lionel Dyck                  *
+  *                     - Additional clenaup                   *
+  *            08/28/18 - 1.09 by Lionel Dyck                  *
+  *                     - Add APPLID to some messages          *
+  *            08/27/18 - 1.08 by Lionel Dyck                  *
+  *                     - Fix SHOW bug                         *
+  *            08/27/18 - 1.07 by Lionel Dyck                  *
+  *                     - Add check for 32K variable limit     *
+  *            08/27/18 - 1.06 by Lionel Dyck                  *
+  *                     - Enhance show and add show all        *
+  *            08/24/18 - 1.05 by Lionel Dyck                  *
+  *                     - Make Free the same as Erase          *
+  *                     - Add help info via ? or Help          *
+  *                     - Change SHOW to msgline and enhance   *
+  *                     - Change restore to msgline            *
+  *                     - Improve comments                     *
+  *            10/08/03 - 1.04 by Chip                         *
+  *                       cgrantha@notes.state.ne.us           *
+  *                     - cleanup spurious ## in variable      *
+  *                     - add options show, erase, member      *
+  *            07/02/03 - 1.03                                 *
+  *                     - Do RESET before RESTORE              *
+  *                     - Dynamically get name of macro        *
+  *            07/02/03 - 1.02                                 *
+  *                     - On Restore insert Info Lines         *
+  *                     - Changed name from LABELS to SAVELAB  *
+  *            07/01/03 - Creation                             *
+  *                                                            *
+  * ---------------------------------------------------------- */
+  Parse source a b MacName c
+
+  Address ISREdit
+  "Macro (option) NOPROCESS"
+
+  parse value '' with null free_labset quiet imac
+  export = 0
+
+  /* ----------------------------------- *
+  * Get the current data set and member *
+  * ----------------------------------- */
+  option = Translate(option)
+  "(member) = member"
+  "(dsname) = dataset"
+  if member = null
+  then key = dsname
+  else key = dsname"("member")"
+
+  /* ------------------------------- *
+  | Position to the Top of the Data |
+  * ------------------------------- */
+  top = 1
+  'Locate' top
+
+  /* ----------------------------- *
+  | Open or Create the ISPF Table |
+  * ----------------------------- */
+  Address ISPExec
+  'tbopen savelab library(ispprof) Share'
+  if rc = 8 then do
+    'tbcreate savelab keys(labelkey) names(labelinf lastdate)' ,
+      'write library(ispprof) share'
+    call convert_table
+  end
+  Address ISREdit
+
+  /* ------------------------------ *
+  * Process the Edit Macro options *
+  * ------------------------------ */
+  option = translate(option)
+
+  Select
+    When abbrev("SAVE",option,1) = 1 then
+    call do_save
+
+    When abbrev("EXPORT",word(option,1),2) = 1 then
+    call do_export
+
+    When abbrev("HELP",option,1) = 1 | option = '?' then
+    call do_help
+
+    When abbrev("IMPORT",word(option,1),2) = 1 then
+    call do_import
+
+    When abbrev("LISTS",word(option,1),1) = 1 then
+    call do_lists
+
+    When option = 'LS' then
+    call do_lists
+
+    When abbrev("QUIET",translate(option),1) = 1 then quiet = 1
+
+    When abbrev("SHOW",word(option,1),2) = 1 then
+    call do_show
+
+    When abbrev("IMAC",translate(option),1) = 1 then do
+      imac = 1
+      quiet = 1
+    end
+
+    When abbrev("WHY",option,1) = 1 then
+    call do_help
+
+    Otherwise call Do_Restore
+  end
+
+  /* ------------------------ *
+  | Restore Labels - default |
+  * ------------------------ */
+Do_Restore:
+  '(loc) = cursor'
+  "Reset All"
+  address ispexec
+  'tbtop savelab'
+  ours = null
+  do forever
+    'tbskip savelab'
+    if rc > 0 then leave
+    if key = labelkey then do
+      ours = labelinf
+      leave
+    end
+  end
+  Address ISREdit
+  if ours = null then do
+    if quiet /= 1 then do
+      msg =  'No labels found for:' key
+      "Line_before" loc "=  msgline (msg)"
+      'locate' loc -1
+    end
+    if imac = null then call define_alias
+    if loc = 1 then loc = 0
+    'locate' loc
+    call close_out
+  end
+  labels = words(ours)
+  do i = 1 to labels
+    label = word(ours,i)
+    parse value label with line":"label
+    "LABEL" line " = "label "0"
+    xrc = rc
+  end
+  call define_alias 'x'
+  zedsmsg = 'Restored.'
+  zedlmsg = 'Labels restored. Use SAVELAB LISTS to view a selection table.'
+  Address ISPExec 'Setmsg msg(isrz001)'
+  if loc = 1 then loc = 0
+  'locate' loc
+  call close_out
+
+  /* -------------- *
+  | Close and Exit |
+  * -------------- */
+Close_out:
+  Address ISPExec
+  'tbclose savelab replcopy library(ispprof)'
+  address isredit
+  exit 1
+
+  /* -------------------------------- *
+  | Define the END Alias to SAVELABE |
+  * -------------------------------- */
+Define_Alias:
+  arg daopt
+  "DEFINE savelabe MACRO CMD"
+  "DEFINE END ALIAS savelabe"
+  "DEFINE savelabs MACRO CMD"
+  "DEFINE SAVE ALIAS savelabs"
+  "DEFINE savelab MACRO CMD"
+  "DEFINE SL   ALIAS savelab"
+  if daopt = null then return
+  text = 'SL may be used as an alias of SAVELAB'
+  'line_before 1 = msgline (text)'
+  Return
+
+  /* ------------------------ *
+  * Save all existing labels *
+  * ------------------------ */
+Do_Save:
+  count = 0
+  save = null
+  'Reset'
+  '(loc) = cursor'
+  "Locate Label First"
+  if rc > 0 then do
+    zedsmsg = 'No Labels'
+    zedlmsg = 'No labels found in this data so no labels saved.'
+    Address ISPExec 'Setmsg msg(isrz001)'
+    'locate' loc
+    call close_out
+  end
+  else do
+    '(last) = linenum .zlast'
+    do while rc = 0
+      "(line) = Display_Lines"
+      "(l1,l2) = Label" line
+      if l1 <> "" then do
+        save = save line+0":"strip(l1)
+        count = count + 1
+      end
+      "Locate Label Next"
+    end
+    labelinf = save
+    labelkey = key
+    lastdate = date('n')
+    address ispexec 'tbmod savelab'
+    address ispexec 'tbsort savelab fields(labelkey,ch,a)'
+    address ispexec 'tbsave savelab library(ispprof)'
+    if loc = 1 then loc = 0
+    'locate' loc
+    zedsmsg = 'Saved.'
+    zedlmsg = count 'labels saved for:' labelkey
+    Address ISPExec 'setmsg msg(isrz001)'
+    if export = 0 then call close_out
+    else Return
+  end
+
+  /* ------------------------------------- *
+  * Show current label variable           *
+  * ------------------------------------- */
+Do_Show:
+  if abbrev('ALL',word(option,2),1) = 1 then call do_showall
+  else call do_lists
+  return
+
+  /* ----------------------------------------------------------------- *
+  | Show ALL routine will display a table of all saved dataset labels |
+  | with the option to D (delete) or to S (show) the labels.          |
+  * ----------------------------------------------------------------- */
+do_showall:
+  satab = 'sa'random(9999)
+  '(loc) = cursor'
+  Address ISPExec
+  'tbcreate' satab 'keys(dsnmem) names(lastdate) nowrite'
+  confirma = 0
+  'tbtop savelab'
+  do forever
+    'tbskip savelab'
+    if rc > 0 then leave
+    dsnmem = labelkey
+    'tbadd' satab
+  end
+  'tbsort' satab 'fields(dsnmem,ch,a)'
+  'tbtop' satab
+  xtop = 0
+  tdsels = 0
+  do forever
+    zsel = null
+    if tdsels < 1 then do
+      if xtop > 0 then do
+        'tbtop' satab
+        'tbskip' satab 'number('xtop')'
+      end
+      'tbdispl' satab 'panel(savelabd)'
+    end
+    else  'tbdispl' satab
+    drc = rc
+    tdsels = ztdsels
+    xtop = ztdtop
+    if ztdsels = 0 then zsel = null
+    if drc > 4 then leave
+    if confirm = 'A' then do
+      confirma = 1
+      confirm = 'Y'
+    end
+    Select
+      When zsel = 'D' then do
+        if confirma = 0 then do
+          'addpop row(4) column(6)'
+          'display panel(savelabp)'
+          crc = rc
+          if crc > 0 then confirm = 'N'
+          'rempop'
+        end
+        if confirm = 'Y' then do
+        labelkey = dsnmem
+        'tbdelete' satab
+        'tbdelete savelab'
+        end
+      end
+      When zsel = 'S' then do
+        'tbtop savelab'
+        do forever
+          'tbskip savelab'
+          if rc > 0 then leave
+          if dsnmem = labelkey then leave
+        end
+        srtab = 'SR'random(9999)
+        'tbcreate' srtab 'names(label record) nowrite'
+        do until length(labelinf) = 0
+          parse value labelinf with rr labelinf
+          parse value rr with record':'label
+          'tbadd' srtab
+        end
+        do forever
+          'tbtop' srtab
+          'control display save'
+          'addpop row(2) column(3)'
+          'tbdispl' srtab 'panel(savelabr)'
+          src = rc
+          'rempop'
+          'control display restore'
+          if src > 0 then do
+            'tbend' srtab
+            leave
+          end
+        end
+      end
+      when zsel = 'U' then do
+        'tbtop savelab'
+        do forever
+          'tbskip savelab'
+          if rc > 0 then leave
+          if dsnmem = labelkey then leave
+        end
+        address isredit
+        '(dsn) = dataset'
+        '(mem) = member'
+        dsnmem = dsn"("mem")"
+        labelkey = dsnmem
+        Address ISPExec
+        'tbmod savelab'
+        'tbmod' satab
+        Address ISREdit
+        call do_restore
+      end
+      Otherwise nop
+    end
+  end
+  'tbend' satab
+  address ISREdit
+  if loc = 1 then loc = 0
+  'locate' loc
+  call close_out
+
+  /* ------------------------------------------------------------ *
+  | This is a one time routine for users of previous versions of |
+  | SAVELAB where the information was saved in an ISPF Profile   |
+  | variable.                                                    |
+  * ------------------------------------------------------------ */
+Convert_Table:
+  Address ISPExec "Vget (savelbl) Profile"
+  if savelbl = null then return
+  do until length(savelbl) = 0
+    parse value savelbl with labelkey . labelinf '%' savelbl
+    'tbadd savelab'
+  end
+  'tbtop savelab'
+  'tbsave savelab pad(250) library(ispprof)'
+  if rc = 0 then
+  'VERASE (SAVELBL) BOTH'
+  zedsmsg = 'Converted.'
+  zedlmsg = 'The SaveLab saved labels have been converted from a' ,
+    'variable in the active ISPF Profile to a row in a' ,
+    'ISPF table that can be found in the ISPPROF dataset.'
+  'setmsg msg(isrz001)'
+  address isredit
+  return
+
+  /* --------------------- *
+  | Show Help information |
+  * --------------------- */
+Do_Help:
+  '(loc) = cursor'
+  Address ISPExec 'select pgm(isptutor) parm(#savelab)'
+  if loc = 1 then loc = 0
+  'locate' loc
+  call close_out
+
+  /* ------------------------------------------ *
+  | Export the current save label set to a PDS |
+  | specified on the Export command and the    |
+  | target member is the same as the active    |
+  | Edit member                                |
+  * ------------------------------------------ */
+Do_Export:
+  target = word(option,2)
+  '(loc) = cursor'
+  if strip(target) = null then do
+    zedsmsg = 'Error.'
+    zedlmsg = 'The SAVELAB Export command requires the name of a' ,
+      'target PDS for the export, without a member name as' ,
+      'the member name will be the name of the PDS member.' ,
+      'Please try again: ' ,
+      'e.g. savelab export dsname'
+    Address ISPExec 'setmsg msg(isrz001)'
+    Address ISREdit
+    if loc = 1 then loc = 0
+    'locate' loc
+    call close_out
+  end
+  Address ISREdit
+  "(last) = linenum .zlast"
+  "(line) = linenum .zcsr"
+  export = 1
+  call do_save
+  'reset'
+  address tso
+  x = listdsi(target)
+  if x > 0 then do
+    'alloc ds('target') new spa(15,15) tr' ,
+      'dsntype(library,2) dsorg(po)' ,
+      'recfm(v b) lrecl(80) blksize(0)'
+    'free ds('target')'
+  end
+  if left(target,1) /= "'"
+  then target = target'('member')'
+  else target = substr(target,1,length(target)-1)"("member")'"
+  dd = 'SL'random(9999)
+  Address ISPExec
+  'tbtop savelab'
+  ours = null
+  do forever
+    'tbskip savelab'
+    if key /= labelkey then iterate
+    ours = labelkey labelinf
+    leave
+  end
+  if strip(ours) = null then do
+    zedsmsg = 'No Labels'
+    zedlmsg = 'No Labels found saved for this data so no Export possible.'
+    Address ISPExec 'Setmsg msg(isrz001)'
+    Address ISREdit
+    if loc = 1 then loc = 0
+    'locate' loc
+    call close_out
+  end
+  if ours = null then leave
+  out = 1
+  drop o.
+  ours = subword(ours,2)
+  do iw = 1 to words(ours)
+    msg =  word(ours,iw)
+    if pos(':',msg) > 1
+    then do
+      o.out = msg
+      out = out + 1
+    end
+  end
+  Address ISREdit
+  '(last) = linenum .zlast'
+  o.out = '>Last' last
+  o.0 = out
+  Address TSO
+  'alloc f('dd') shr ds('target') reuse'
+  'execio * diskw' dd '(finis stem o.'
+  'free f('dd')'
+  zedsmsg = 'Exported.'
+  zedlmsg = 'Exported the Saved Label Set for' member ,
+    'to' target
+  Address ISPExec 'setmsg msg(isrz001)'
+  address isredit
+  if loc = 1 then loc = 0
+  'locate' loc
+  call close_out
+
+  /* ---------------------------------------------------------- *
+  | Import the labels from a member in the specified PDS where |
+  | the member is the same name as the current member.         |
+  |                                                            |
+  | the format is label: record                                |
+  | e.g. .LBL:21                                               |
+  * ---------------------------------------------------------- */
+Do_Import:
+  saved = word(option,2)
+  '(loc) = cursor'
+  'reset all'
+  address tso
+  if sysdsn(saved) /= 'OK' then do
+    Address ISREdit
+    zedsmsg = 'Error.'
+    zedlmsg = 'Import source PDS error:' sysdsn(saved)
+    Address ISPexec 'Setmsg msg(isrz001)'
+    call close_out
+  end
+  dd = 'SL'random(99999)
+  if left(saved,1) /= "'"
+  then saved = saved'('member')'
+  else saved = substr(saved,1,length(saved)-1)"("member")'"
+  'Alloc f('dd') shr ds('saved') reuse'
+  'Execio * diskr' dd '(finis stem in.'
+  'Free  f('dd')'
+  address isredit
+  imc = 0
+  do i = 1 to in.0
+    if translate(word(in.i,1)) = '>LAST' then do
+      last = word(in.i,2) +0
+      iterate
+    end
+    parse value in.i with record':'label
+    'Label' record '=' label 0
+    imc = imc + 1
+  end
+  '(nlast) = linenum .zlast'
+  if datatype(last) = 'NUM' then
+  if nlast /= last then do
+    zedsmsg = 'Mismatch.'
+    zedlmsg = imc 'labels were imported.' ,
+      'The exported labels represent labels from a member with' ,
+      last+0 'number of records. This member has' nlast+0 'records' ,
+      'which may result in labels not being on the correct' ,
+      'records.'
+    Address ISPExec 'Setmsg msg(isrz001)'
+  end
+  else do
+    zedsmsg = 'Imported'
+    zedlmsg = imc 'labels were imported.'
+    Address ISPExec 'Setmsg msg(isrz001)'
+  end
+  if loc = 1 then loc = 0
+  'Locate' loc
+  Call close_out
+
+  /* ------------------------------------------------------------- *
+  | Label Selection List - modelled after the List option by Alex |
+  |                                                               |
+  | Presents the user a popup selection table of active labels.   |
+  | Select a label by S or point-and-shoot to jump to.            |
+  * ------------------------------------------------------------- */
+Do_Lists:
+  top = 1
+  "Reset"
+  '(loc) = cursor'
+  "Locate Label First"
+  if rc > 0 then do
+    if quiet /= 1 then do
+      msg =  'No labels found in this file'
+      "Line_after" loc "=  msgline (msg)"
+    end;
+    if loc = 1 then loc = 0
+    'locate' loc
+    call close_out
+  end;
+  labeltbl = 'LABEL'random(999)
+  Address ISPExec ,
+    'tbcreate' labeltbl 'names(label record data) nowrite'
+  do i=1 by 1
+    "(line) = Display_Lines"
+    "(l1,l2) = Label" line
+    "(curr) = line" l1;
+    label =  left(l1,9)
+    record = right(line+0,6)
+    data = strip(curr)
+    Address ISPExec ,
+      'tbadd' labeltbl
+    "Locate Label Next"
+    if rc \=0 then
+    do
+      Address ISPExec
+      'tbtop' labeltbl
+      sorto = 'A'
+      sortro = 'A'
+      ttop   = 0
+      do forever
+        ssel = null
+        row = 0
+        if ttop > 0 then do
+          'tbtop' labeltbl
+          'tbskip' labeltbl 'number('ttop')'
+        end
+        'addpop'
+        'tbdispl' labeltbl 'panel(savelabt)'
+        trc = rc
+        ttop = ztdtop
+        'rempop'
+        if trc > 0 then do
+          if loc = 1 then loc = 0
+          Address ISREdit ,
+            'locate' loc
+          'tbend' labeltbl
+          call close_out
+        end
+        if datatype(row) /= 'NUM' then row = 0
+        Select
+          when zcmd = 'SORT' then do
+            if sorto = 'A'
+            then sorto = 'D'
+            else sorto = 'A'
+            'tbsort' labeltbl 'Fields(label,ch,'sorto')'
+          end
+          when zcmd = 'SORTR' then do
+            if sortro = 'A'
+            then sortro = 'D'
+            else sortro = 'A'
+            'tbsort' labeltbl 'Fields(record,ch,'sortro')'
+          end
+          when row > 0 & row /= null then do
+            'tbtop' labeltbl
+            'tbskip' labeltbl 'number('row')'
+            call do_sel
+          end
+          when ssel = 'S' then call  do_sel
+          otherwise nop
+        end
+      end
+    end
+  end
+
+  /* -------------------------------------- *
+  | Do the actual label selection and jump |
+  * -------------------------------------- */
+Do_Sel:
+  label = word(label,1)
+  address isredit
+  'Locate' label
+  call close_out
