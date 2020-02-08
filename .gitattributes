@@ -13,3 +13,4 @@
 *.jpeg binary
 *.png binary
 *.gif binary
+SAVELAB.PDS/EXEC git-encoding=BINARY zos-working-tree-encoding=BINARY binary
