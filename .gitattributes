@@ -17,3 +17,4 @@ SAVELAB.PDS/EXEC git-encoding=BINARY zos-working-tree-encoding=BINARY binary
 SAVELAB.PDS/EXPORT git-encoding=BINARY zos-working-tree-encoding=BINARY binary
 SAVELAB.PDS/PANELS git-encoding=BINARY zos-working-tree-encoding=BINARY binary
 SAVELAB.PDS/EXEC git-encoding=BINARY zos-working-tree-encoding=BINARY binary
+SAVELAB.PDS/EXPORT git-encoding=BINARY zos-working-tree-encoding=BINARY binary
