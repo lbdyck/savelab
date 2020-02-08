@@ -1,7 +1,9 @@
 Welcome to the SAVELAB Package - see the Overview below for more
 information on SAVELAB.
 
-Note: If you downloaded from github then ignore teh $RECV
+Note: If you downloaded from github then ignore the $RECV but you
+      should look at using zigi (https://zigi.rocks) for the clone
+      and installation.
 
 This dataset contains the following members (which have meaningful ISPF
 stat userids):

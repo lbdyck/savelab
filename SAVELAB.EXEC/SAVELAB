@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.00"
+  ver = "2.01"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -98,6 +98,8 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            02/08/20 - 2.01 by Lionel Dyck                  *
+  *                     - Fix tbend for label table            *
   *            02/01/20 - 2.00 by Lionel Dyck                  *
   *                     - Convert from storing in the profile  *
   *                       to a unique ISPF Table               *
@@ -727,6 +729,7 @@ Do_Lists:
           if loc = 1 then loc = 0
           Address ISREdit ,
             'locate' loc
+          Address ISPExec ,
           'tbend' labeltbl
           call close_out
         end
