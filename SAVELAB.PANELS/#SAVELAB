@@ -1,8 +1,8 @@
 )Attr Default(%+_)
    ` area(SCRL) Extend(ON)
-   ¢ type(text) intens(high) color(yellow)
+   { type(text) intens(high) color(yellow)
 )Body expand(\\)
-%Tutorial+-\-\-¢Why use ISPF Edit Labels?+-\-\-%Tutorial+
+%Tutorial+-\-\-{Why use ISPF Edit Labels?+-\-\-%Tutorial+
 %Command ===>_zcmd
 +
                                                                   %Up F10 Dn F11
