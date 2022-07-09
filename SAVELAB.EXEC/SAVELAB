@@ -111,6 +111,7 @@
   * History:                                                   *
   *            07/09/22 - 2.11 by Lionel Dyck                  *
   *                     - Move call to define_alias earlier    *
+  *                     - Fix Export and add stats to export   *
   *            04/04/20 - 2.10 by Lionel Dyck                  *
   *                     - Compare using SAVELABC               *
   *                     - Add Hide option                      *
@@ -482,6 +483,7 @@ Do_Save:
   zedlmsg = count 'labels saved for:' labelkey
   Address ISPExec 'setmsg msg(isrz001)'
   end
+  if export = 1 then return
   call close_out
 
   /* ------------------------------------- *
@@ -672,6 +674,7 @@ Do_Export:
       'recfm(v b) lrecl(80) blksize(0)'
     'free ds('target')'
   end
+  lm_targ = target
   if left(target,1) /= "'"
   then target = target'('member')'
   else target = substr(target,1,length(target)-1)"("member")'"
@@ -712,9 +715,17 @@ Do_Export:
   o.out = '>Last' last
   o.0 = out
   Address TSO
+  dd = 'S'time('s')
   'alloc f('dd') shr ds('target') reuse'
   'execio * diskw' dd '(finis stem o.'
   'free f('dd')'
+  trace '?i'
+  Address ISPExec
+  "LMINIT DATAID(zstats) DATASET("lm_targ")"
+  "LMOPEN DATAID("zstats") OPTION(INPUT)"
+  'LMMSTATS DATAID('zstats') Member('member') user('sysvar(sysuid)')'
+  "LMClose Dataid("zstats")"
+  "LMFree  Dataid("zstats")"
   zedsmsg = 'Exported.'
   zedlmsg = 'Exported the Saved Label Set for' member ,
     'to' target
