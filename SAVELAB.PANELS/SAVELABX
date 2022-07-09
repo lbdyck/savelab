@@ -1,0 +1,28 @@
+)Attr
+ $ type(input) hilite(uscore) caps(on)
+)Body Window(47,4)
++Enter/Confirm Export/Import Dataset Name:
+$eximdsn                                      +
++
++Press%Enter+to continue or%F3+to Cancel.
+)Init
+ &zwinttl = 'Export/Import Dataset Prompt'
+)Proc
+  ver (&eximdsn,nb,dsname)
+  &resp = .resp
+*REXX(* zedsmsg zedlmsg resp)
+ zedsmsg = ''
+ if resp = 'END' then exit
+ x = listdsi(eximdsn)
+ if x > 0 then do
+    zedsmsg = 'Invalid.'
+    zedlmsg = left(eximdsn 'is in error due to:',76) sysmsglvl2
+    end
+ if sysdsorg /= 'PO' then do
+    zedsmsg = 'Invalid.'
+    zedlmsg = eximdsn 'must be a PDS'
+    end
+*ENDREXX
+ if (&zedsmsg NE &Z)
+    .msg = isrz001
+)End

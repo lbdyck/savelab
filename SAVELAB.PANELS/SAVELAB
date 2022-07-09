@@ -1,0 +1,35 @@
+)Attr
+ $ type(input) hilite(uscore) caps(off)
+ + type(text) skip(off) intens(low)
+ [ type(ps)
+)Body Window(63,12)
+%Command ===>_zcmd
++
+[Export+   Export Labels (dsname required)
+[Import+   Import Labels (dsname required)
+[Help+     Display Tutorial Panel
+[Hide$z +  Hide all and Display n lines before/after each Label
+[List+     List all active labels
+[Restore+  Restore saved labels
+[Save+     Save all current labels
+[ShowAll+  Show all dataset(members) with saved labels
++
++Enter a command or select (point-and-shoot) or%F3+to cancel
+)Init
+.zvars = '(hiden)'
+ &zwinttl = 'SAVELAB Command Prompt'
+)Proc
+ if (&hiden NE &Z)
+    &zcmd = 'HIDE'
+ if (&zcmd EQ 'HIDE')
+    ver (&hiden,nb,num)
+)PNTS
+ FIELD(ZPS00001) VAR(zcmd) VAL('EXPORT')
+ FIELD(ZPS00002) VAR(zcmd) VAL('IMPORT')
+ FIELD(ZPS00003) VAR(zcmd) VAL('HELP')
+ FIELD(ZPS00004) VAR(zcmd) VAL('HIDE')
+ FIELD(ZPS00005) VAR(zcmd) VAL('LIST')
+ FIELD(ZPS00006) VAR(zcmd) VAL('RESTORE')
+ FIELD(ZPS00007) VAR(zcmd) VAL('SAVE')
+ FIELD(ZPS00008) VAR(zcmd) VAL('SHOW ALL')
+)End

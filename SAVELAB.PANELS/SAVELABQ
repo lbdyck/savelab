@@ -1,0 +1,14 @@
+)Attr
+)Body Window(58,6)
++SAVELAB Restore requested but no Save has been preformed
++since the last Restore yet the data has changed or there
++are labels present that will be lost.  Doing a Restore
++could result in Edit Labels being positioned incorrectly.
++
++Confirm Restore:_z+Y or N (or%F3+to cancel)
+)Init
+ .zvars = '(rans)'
+  &zwinttl = 'Saved Labels'
+)Proc
+ ver (&rans,nb,list,Y,N)
+)End

@@ -1,0 +1,56 @@
+  /* --------------------  rexx procedure  -------------------- *
+  | Name:      SaveLabC                                        |
+  |                                                            |
+  | Function:  ISPF Edit Macro to issue the Compare command    |
+  |            but with some enhancements to preserve the      |
+  |            existing labels.                                |
+  |                                                            |
+  |            Saves all active labels and then invokes        |
+  |            the compare command that was requested.         |
+  |                                                            |
+  |            After the compare then saved labels are         |
+  |            restored where they belong.                     |
+  |                                                            |
+  | Dependencies:  Enabled as an ALIAS of COMPARE when the     |
+  |                SAVELAB macro is used to save or restore    |
+  |                labels.                                     |
+  |                                                            |
+  | Author:    Lionel B. Dyck                                  |
+  |                                                            |
+  | History:  (most recent on top)                             |
+  |            04/28/18 - Revise if under PDSEGEN              |
+  |            04/06/18 - Fixup code to really work            |
+  |                     - Check for PDSEGEN and define pdsegcpr|
+  |            03/19/18 - Creation                             |
+  |                                                            |
+  * ---------------------------------------------------------- */
+  Address ISREDIT
+  'Macro (options)'
+
+  /* -------------------------------------------------------- *
+  | Save all existing labels but don't report anything.      |
+  |                                                          |
+  | Then reset the compare command definition to whatever it |
+  | was prior to savelab.                                    |
+  * -------------------------------------------------------- */
+  'savelab save quiet'
+
+  address ispexec 'vget (higen mgen)'
+  /* ------------------------ *
+  | Perform the Edit Compare |
+  * ------------------------ */
+  if higen = ''
+  then 'Builtin Compare' options
+  else '%pdsegcpr' options
+
+  /* ------------------------------------------------------- *
+  | Now restore all the previously saved label so they are  |
+  | not relocated by the user inserting or deleting records |
+  | using the compare messages.                             |
+  * ------------------------------------------------------- */
+  'savelab noreset'
+  if higen /= null then exit
+  text = 'Savelab: Issue Savelab Save to save just your labels and remove'
+  'line_before 1 = msgline (text)'
+  text = '         all the compare labels.'
+  'line_before 1 = msgline (text)'
