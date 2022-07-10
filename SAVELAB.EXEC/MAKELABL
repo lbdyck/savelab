@@ -1,0 +1,50 @@
+/*---------------------  rexx procedure  -------------------- *
+ | Name:      MAKELABL                                        |
+ |                                                            |
+ | Function:  ISPF Edit Macro to Create Edit Labels for       |
+ |            each routine.                                   |
+ |                                                            |
+ | Usage Notes:  Routine labels are for routines that         |
+ |               start with text and end with a :             |
+ |                                                            |
+ |               The label will be the 1st letter of each     |
+ |               part of the routine or the 1st 5 chars of    |
+ |               routine name.                                |
+ |                                                            |
+ |               Examples:                                    |
+ |                  DoIt:        ->    .doit                  |
+ |                  Do_It:       ->    .di                    |
+ |                  DoSomething: ->    .dosom                 |
+ |                                                            |
+ | Dependencies:  Designed for use with REXX code             |
+ |                                                            |
+ | Author:    Lionel B. Dyck                                  |
+ |                                                            |
+ | History:  (most recent on top)                             |
+ |            2022/07/10 LBD - Creation                       |
+ |                                                            |
+ * ---------------------------------------------------------- */
+ Address ISREdit
+ 'Macro (options)'
+
+Start:
+  '(last)  = linenum .zlast'
+
+Do_It:
+   do i = 1 to last
+      '(d) = line' i
+      if right(word(d,1),1) /= ':' then iterate
+      parse value d with name':'.
+      if pos('_',name) > 0 then do
+         name = translate(name,' ','_')
+         label = ''
+         do w = 1 to words(name)
+            label = label''left(word(name,w),1)
+            end
+         end
+      else label = strip(left(name,5))
+      'label' i '= .'label 0
+      end
+
+DoneWithTheTask:
+    exit
