@@ -10,12 +10,14 @@ stat userids):
 
    $README  - what you are reading
    $README2 - migration information from a pre-2.0 release
-   $RECV    - exec to run to expand the xmit members
+   $RECV ** - exec to run to expand the xmit members
    $WHY     - brief why use ISPF Edit Labels
    @MSG     - TSO Transmit message text
-   EXEC     - TSO Transmit (XMIT) REXX library
-   EXPORT   - SAVELAB export of the Savelab labels
-   PANELS   - TSO Transmit (XMIT) ISPF Panels Library
+   EXEC *   - TSO Transmit (XMIT) REXX library
+   EXPORT * - SAVELAB export of the Savelab labels
+   PANELS * - TSO Transmit (XMIT) ISPF Panels Library
+   * these members do not exist in the git repository version
+   ** this is not required with the git repository version
 
 After installing SAVELAB to experiment Edit the SAVELAB exec and use the
 command SAVELAB IMP dsn(SAVELAB) to restore the Edit Labels for it

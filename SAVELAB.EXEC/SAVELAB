@@ -109,6 +109,8 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            07/10/22 - 2.12 by Lionel Dyck                  *
+  *                     - Fixup random bug                     *
   *            07/09/22 - 2.11 by Lionel Dyck                  *
   *                     - Move call to define_alias earlier    *
   *                     - Fix Export and add stats to export   *
@@ -752,11 +754,11 @@ Do_Hide:
     label = '.TT'
     tline = line - show
     if tline < 1 then tline = 1
-    "LABEL" tline " = "label
+    "LABEL" tline " = "label 0
     label = '.BB'
     bline = line + show
     if bline > last then bline = last
-    "LABEL" bline " = "label
+    "LABEL" bline " = "label 0
     'flip .TT .BB'
     'reset label' tline tline
     'reset label' bline bline
