@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.12"
+  ver = "2.13"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -109,6 +109,8 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            07/11/22 - 2.13 by Lionel Dyck                  *
+  *                     - Allow call from external with parm   *
   *            07/10/22 - 2.12 by Lionel Dyck                  *
   *                     - Fixup random bug                     *
   *            07/09/22 - 2.11 by Lionel Dyck                  *
@@ -216,14 +218,18 @@
   * ---------------------------------------------------------- */
   Parse source a b MacName c
 
+  Address ISPExec 'Control Errors Return'
+
   Address ISREdit
   "Macro (option) NOPROCESS"
+  if rc > 0 then do
+     arg option
+     Address ISREdit
+     end
 
   parse value '' with null free_labset quiet imac
   export  = 0
   noreset = 0
-
-  Address ISPExec 'Control Errors Return'
 
   /* ----------------------------------- *
   * Get the current data set and member *

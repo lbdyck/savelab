@@ -121,3 +121,30 @@ Overview
                can insert additional labels that you may not
                want to save - just beware.
 
+## Bonus
+
+Included with SAVELAB is another Edit command (macro) designed
+specifically for use with REXX source code.
+
+That command is **REXXLABL** which will create ISPF Edit Labels for
+every sub-routine name within the REXX code. Existing labels are
+retained and new labels created - then SAVELAB LIst is invoked.
+
+Routine labels are for routines that start with text and end with a :
+
+The label will be the 1st letter of each part of the routine or the 1st
+5 chars of routine name.
+
+ Examples:
+    DoIt:        ->    .doit
+    Do_It:       ->    .di
+    DoSomething: ->    .dosom
+    Do_it1:      ->    .di
+
+Routine labels with numbers or special chars will be have them
+translated to blanks.
+
+Existing labels will be unchanged.
+
+Duplicate labels will have a suffix of A, B, ... appended if possible.
+* if label is 5 chars then last removed and the suffix appended.
