@@ -4,12 +4,12 @@
   | Function:  ISPF Edit Macro to Create Edit Labels for       |
   |            each routine label for REXX code.               |
   |                                                            |
-  | Usage Notes:  Routine labels are for routines that         |
-  |               start with text and end with a :             |
+  | Usage Notes: Routine labels are for routines that          |
+  |              start with text and end with a :              |
   |                                                            |
-  |               The label will be the 1st letter of each     |
-  |               part of the routine or the 1st 5 chars of    |
-  |               routine name.                                |
+  |              The label will be the 1st letter of each      |
+  |              part of the routine or the 1st 5 chars of     |
+  |              routine name.                                 |
   |                                                            |
   |               Examples:                                    |
   |                  DoIt:        ->    .doit                  |
@@ -74,7 +74,8 @@ Do_It:
 
 DoneWithTheTask:
   zedsmsg = null
-  zedlmsg = count 'labels created with' current' existing'
+  zedlmsg = left(count 'labels created with' current' existing.',75),
+    'Use command Savelab Li (or sl li) to list active labels.'
   Address ISPExec ,
     'Setmsg msg(isrz001)'
   x = savelab('LI')
