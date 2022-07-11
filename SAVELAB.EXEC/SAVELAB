@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.13"
+  ver = "2.14"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -109,6 +109,8 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            07/12/22 - 2.14 by Lionel Dyck                  *
+  *                     - Support Find/RFind in label table    *
   *            07/11/22 - 2.13 by Lionel Dyck                  *
   *                     - Allow call from external with parm   *
   *            07/10/22 - 2.12 by Lionel Dyck                  *
@@ -878,6 +880,7 @@ Do_Lists:
           'tbskip' labeltbl 'number('ttop')'
         end
         'addpop'
+        zcmd = null
         'tbdispl' labeltbl 'panel(savelabt)'
         trc = rc
         ttop = ztdtop
@@ -891,6 +894,7 @@ Do_Lists:
           call close_out
         end
         if datatype(row) /= 'NUM' then row = 0
+        if zcmd = 'RFIND' then zcmd = 'F' findstr
         Select
           when zcmd = 'SORT' then do
             if sorto = 'A'
@@ -904,6 +908,32 @@ Do_Lists:
             else sortro = 'A'
             'tbsort' labeltbl 'Fields(record,ch,'sortro')'
           end
+          when abbrev('FIND',word(zcmd,1),1) = 1 then do
+             'tbtop' labeltbl
+             'tbskip' labeltbl 'number('ttop')'
+             if rc > 0 then leave
+             stop = ttop
+             findstr = translate(subword(zcmd,2))
+             do forever
+                'tbskip' labeltbl
+                if rc > 0 then do
+                   ttop = 0
+                   zedsmsg = 'Not Found.'
+                   zedlmsg = findstr 'was not found in either the label',
+                     'or the data fields of the label table.'
+                   'setmsg msg(isrz001)'
+                   leave
+                   end
+                ttop = ttop + 1
+                if pos(findstr,translate(label data)) = 0 then iterate
+                'tbtop' labeltbl
+                'tbskip' labeltbl 'number('ttop')'
+                zedsmsg = 'Found.'
+                zedlmsg = findstr 'found in the table.'
+                'setmsg msg(isrz001)'
+                leave
+                end
+             end
           when row > 0 & row /= null then do
             'tbtop' labeltbl
             'tbskip' labeltbl 'number('row')'

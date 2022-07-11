@@ -4,8 +4,8 @@
  # type(output) caps(off) intens(low)
  { type(output) pas(on) intens(low)  hilite(uscore) caps(off)
  } type(output) pas(on) intens(high)  hilite(uscore) caps(off)
-)Body Window(60,16)
-%Command ===>_zcmd                            %Scroll:$zcsr+
+)Body Window(66,16)
+%Command ===>_zcmd                                         $zcsr+
 +
 +Command:}Sort+(Label)}SortR+(Record) Select:%S+or%Enter+
 +S  {Lab  {Rec   +Data
@@ -18,7 +18,7 @@ $z+@z     @z     #data
  &rec = 'Record'
  .zvars = '(ssel label record)'
  &zwinttl = 'Active Edit Labels'
- .help = savelabt
+ .help = #savelab
 )Proc
  ver (&ssel,list,S)
  IF (&ZCMD = &Z)
@@ -34,6 +34,6 @@ $z+@z     @z     #data
 )Pnts
  Field(lab )  var(zcmd) val(SORT)
  Field(sort)  var(zcmd) val(SORT)
- Field(sortr)  var(zcmd) val(SORTR)
- Field(rec ) var(zcmd) val(SORTR)
+ Field(sortr) var(zcmd) val(SORTR)
+ Field(rec )  var(zcmd) val(SORTR)
 )End

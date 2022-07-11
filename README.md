@@ -125,7 +125,7 @@ Overview
 Included with SAVELAB is another Edit command (macro) designed
 specifically for use with REXX source code.
 
-That command is **REXXLABL** which will create ISPF Edit Labels for
+That command is **REXXLAB** which will create ISPF Edit Labels for
 every sub-routine name within the REXX code. Existing labels are
 retained and new labels created - then SAVELAB LIst is invoked.
 
