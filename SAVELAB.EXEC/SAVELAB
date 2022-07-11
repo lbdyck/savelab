@@ -727,7 +727,6 @@ Do_Export:
   'alloc f('dd') shr ds('target') reuse'
   'execio * diskw' dd '(finis stem o.'
   'free f('dd')'
-  trace '?i'
   Address ISPExec
   "LMINIT DATAID(zstats) DATASET("lm_targ")"
   "LMOPEN DATAID("zstats") OPTION(INPUT)"
