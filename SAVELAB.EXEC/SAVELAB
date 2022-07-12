@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.14"
+  ver = "2.15"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -109,7 +109,10 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
-  *            07/12/22 - 2.14 by Lionel Dyck                  *
+  *            07/12/22 - 2.15 by Lionel Dyck                  *
+  *                     - If entered from external then do not *
+  *                       enable save/end aliases              *
+  *            07/11/22 - 2.14 by Lionel Dyck                  *
   *                     - Support Find/RFind in label table    *
   *            07/11/22 - 2.13 by Lionel Dyck                  *
   *                     - Allow call from external with parm   *
@@ -220,6 +223,10 @@
   * ---------------------------------------------------------- */
   Parse source a b MacName c
 
+  parse value '' with null free_labset quiet imac external
+  export  = 0
+  noreset = 0
+
   Address ISPExec 'Control Errors Return'
 
   Address ISREdit
@@ -227,11 +234,8 @@
   if rc > 0 then do
      arg option
      Address ISREdit
+     external = 1
      end
-
-  parse value '' with null free_labset quiet imac
-  export  = 0
-  noreset = 0
 
   /* ----------------------------------- *
   * Get the current data set and member *
@@ -421,15 +425,17 @@ Close_out:
   | Define the END Alias to SAVELABE |
   * -------------------------------- */
 Define_Alias:
-  'DEFINE COMPARE RESET'
-  "DEFINE savelabc MACRO CMD"
-  "DEFINE COMPARE ALIAS savelabc"
-  'DEFINE END RESET'
-  "DEFINE savelabe MACRO CMD"
-  "DEFINE END ALIAS savelabe"
-  'DEFINE SAVE RESET'
-  "DEFINE savelabs MACRO CMD"
-  "DEFINE SAVE ALIAS savelabs"
+  if external = null then do
+     'DEFINE COMPARE RESET'
+     "DEFINE savelabc MACRO CMD"
+     "DEFINE COMPARE ALIAS savelabc"
+     'DEFINE END RESET'
+     "DEFINE savelabe MACRO CMD"
+     "DEFINE END ALIAS savelabe"
+     'DEFINE SAVE RESET'
+     "DEFINE savelabs MACRO CMD"
+     "DEFINE SAVE ALIAS savelabs"
+     end
   'DEFINE SL RESET'
   "DEFINE savelab MACRO CMD"
   "DEFINE SL   ALIAS savelab"

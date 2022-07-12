@@ -32,6 +32,7 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2022/07/12 LBD - Update message                 |
   |            2022/07/11 LBD - Invoke Savelab li              |
   |                           - Renamed from REXXLABL          |
   |                           - Check for LOADISPF and ignore  |
@@ -82,7 +83,9 @@ Do_It:
 DoneWithTheTask:
   zedsmsg = null
   zedlmsg = left(count 'labels created with' current' existing.',75),
-    'Use command Savelab Li (or sl li) to list active labels.'
+    left('Use command Savelab Li (or sl li) to list active labels.',75),
+    'Use command Savelab Save (or sl save) to save active labels which can' ,
+    'then be restored using the command Savelab.'
   Address ISPExec ,
     'Setmsg msg(isrz001)'
   x = savelab('LI')
