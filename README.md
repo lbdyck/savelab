@@ -105,8 +105,10 @@ Overview
                doing an export.
 
   Notes:
+  
             1. If the ISPF Session abnormally terminates the
                updates may not be saved in the table.
+               
             2. This code may be installed using a different
                name if SAVELAB is too long (e.g. SL)
                - if you do that then you MUST rename the
@@ -115,11 +117,14 @@ Overview
                  it defines an alias of SL for SAVELAB
             3. All members/labels info is saved in a table
                in the users ISPF Profile dataset.
+               
             4. The same member in different data sets MAY be
                processed with No Conflicts.
+               
             5. Using the ISPF Compare, and some other tools,
                can insert additional labels that you may not
                want to save - just beware.
+               
 
 ## Bonus
 
