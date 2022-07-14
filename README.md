@@ -104,7 +104,8 @@ Overview
                An Export will force a SAVELAB Save before
                doing an export.
 
-  Notes:    1. If the ISPF Session abnormally terminates the
+  Notes:
+            1. If the ISPF Session abnormally terminates the
                updates may not be saved in the table.
             2. This code may be installed using a different
                name if SAVELAB is too long (e.g. SL)

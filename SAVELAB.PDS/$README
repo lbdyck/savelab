@@ -135,11 +135,17 @@ Routine labels are for routines that start with text and end with a :
 The label will be the 1st letter of each part of the routine or the 1st
 5 chars of routine name.
 
- Examples:
-    DoIt:        ->    .doit
-    Do_It:       ->    .di
-    DoSomething: ->    .dosom
-    Do_it1:      ->    .di
+If the label is 5 characters, or less, then it will be used as is.
+
+If the label with _ removed and combined is 5 characters, or less, then
+it will be used.
+
+    Examples:
+        DoIt:        ->    .doit
+        Do_It:       ->    .doit
+        Do_It12:     ->    .doit
+        Do_Another:  ->    .doano
+        DoSomething: ->    .dosom
 
 Routine labels with numbers or special chars will be have them
 translated to blanks.

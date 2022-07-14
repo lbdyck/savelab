@@ -11,11 +11,19 @@
   |              part of the routine or the 1st 5 chars of     |
   |              routine name.                                 |
   |                                                            |
-  |               Examples:                                    |
+  |              If the label is 5 characters, or less, then   |
+  |              it will be used as is.                        |
+  |                                                            |
+  |              If the label with _ removed and combined      |
+  |              is 5 characters, or less, then it will be     |
+  |              used.                                         |
+  |                                                            |
+  |              Examples:                                     |
   |                  DoIt:        ->    .doit                  |
-  |                  Do_It:       ->    .di                    |
+  |                  Do_It:       ->    .doit                  |
+  |                  Do_It12:     ->    .doit                  |
+  |                  Do_Another:  ->    .doano                 |
   |                  DoSomething: ->    .dosom                 |
-  |                  Do_it1:      ->    .di                    |
   |                                                            |
   |              Routine labels with numbers or special chars  |
   |              will be have them translated to blanks.       |
@@ -32,6 +40,7 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2022/07/13 LBD - Improve label setup            |
   |            2022/07/12 LBD - Update message                 |
   |            2022/07/11 LBD - Invoke Savelab li              |
   |                           - Renamed from REXXLABL          |
@@ -67,7 +76,9 @@ Do_It:
     if pos('_',name) > 0 then do
       name = translate(name,' ','_')
       label = null
-      do w = 1 to words(name)
+      if length(space(name,0)) < 6
+         then label = space(name,0)
+      else do w = 1 to words(name)
         label = label''left(word(name,w),1)
       end
       end
