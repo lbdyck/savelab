@@ -40,6 +40,8 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2022/07/19 LBD - Remove any existing Compare    |
+  |                             Labels (.OAAxx)                |
   |            2022/07/13 LBD - Improve label setup            |
   |            2022/07/12 LBD - Update message                 |
   |            2022/07/11 LBD - Invoke Savelab li              |
@@ -135,6 +137,8 @@ Get_Labels:
   do forever
     "(line) = Display_Lines"
     "(l1,l2) = Label" line
+    if left(l1,4) = '.OAA' then
+       "RESET LABEL" line line /* remove any compare labels */
     l1 = strip(substr(l1,2))
     lab.l1 = 1
     current = current + 1
