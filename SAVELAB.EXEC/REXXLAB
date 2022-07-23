@@ -40,6 +40,9 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2022/07/23 LBD - two fixes                      |
+  |                             Ignore labels in a comment     |
+  |                             Ignore labels in a literal     |
   |            2022/07/19 LBD - Remove any existing Compare    |
   |                             Labels (.OAxxx)                |
   |            2022/07/13 LBD - Improve label setup            |
@@ -67,10 +70,19 @@ Start:
 Do_It:
   do i = 1 to last
     if i > listart
-       then if i < liend
-       then iterate
+    then if i < liend
+    then iterate
     '(d) = line' i
     if right(word(d,1),1) /= ':' then iterate
+
+    /* now filter out some records */
+    colon = pos(':',d)
+    if pos('/*',d) > 1 then
+    if colon > cmt then iterate  /* ignore comments */
+    quote = pos("'",d)
+    if quote > 1 then
+    if quote < colon then iterate  /* ignore literals */
+
     "(l1,l2) = Label" i
     if l1 /= null then iterate /* skip is it has a label */
     parse value d with name':'.
@@ -79,12 +91,12 @@ Do_It:
       name = translate(name,' ','_')
       label = null
       if length(space(name,0)) < 6
-         then label = space(name,0)
+      then label = space(name,0)
       else do w = 1 to words(name)
         label = label''left(word(name,w),1)
       end
-      end
-     else label = strip(left(name,5))
+    end
+    else label = strip(left(name,5))
     label = strip(left(translate(label),5))
     if lab.label = 1 then call fixup_label
 
@@ -117,7 +129,7 @@ Fixup_Label:
       end
     end
     Otherwise do
-    label = left(label,4)   /* get 4 chars from label */
+      label = left(label,4)   /* get 4 chars from label */
       c = 0
       do forever  /* now add suffix to it */
         c = c + 1
@@ -138,7 +150,7 @@ Get_Labels:
     "(line) = Display_Lines"
     "(l1,l2) = Label" line
     if left(l1,3) = '.OA' then
-       "RESET LABEL" line line /* remove any compare labels */
+    "RESET LABEL" line line /* remove any compare labels */
     l1 = strip(substr(l1,2))
     lab.l1 = 1
     current = current + 1
@@ -148,14 +160,14 @@ Get_Labels:
   return
 
   /* ------------------------------------------ *
-   | Ignore all records within a LOADISPF block |
-   * ------------------------------------------ */
+  | Ignore all records within a LOADISPF block |
+  * ------------------------------------------ */
 Check_Loadispf:
   'Find "loadispf" first'
   if rc > 0 then do
-     loadispf = 0
-     return
-     end
+    loadispf = 0
+    return
+  end
   'Find ">start" 1 first'
   '(listart) = cursor'
   'Find ">end" 1 first'
