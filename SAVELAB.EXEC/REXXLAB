@@ -40,6 +40,8 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2023/06/30 LBD - fix only use : in 1st word     |
+  |                             and ignore in comments         |
   |            2022/07/23 LBD - two fixes                      |
   |                             Ignore labels in a comment     |
   |                             Ignore labels in a literal     |
@@ -57,10 +59,11 @@
   Address ISREdit
   'Macro (options)'
 
-  parse value '' with null lab.
-  count = 0
+  parse value '' with null lab. comment
+  count   = 0
   current = 0
-  alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  listart = 0
+  alpha   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 Start:
   '(last)  = linenum .zlast'
@@ -69,13 +72,26 @@ Start:
 
 Do_It:
   do i = 1 to last
-    if i > listart
-    then if i < liend
-    then iterate
+    if listart > 0 then do
+       if i > listart
+       then if i < liend
+       then iterate
+       end
     '(d) = line' i
+    if comment /= null then
+       if pos('*/',d) > 0 then comment = null
+    if pos('/*',d) > 0 then do
+       comment = 1
+       if pos(':',d) < pos('/*',d) then do
+          comment = 1
+          if pos('*/',d) > pos('/*',d) then comment = null
+          end
+       end
+    if comment = 1 then iterate
     if right(word(d,1),1) /= ':' then iterate
 
     /* now filter out some records */
+    d = word(d,1)
     colon = pos(':',d)
     if pos('/*',d) > 1 then
     if colon > cmt then iterate  /* ignore comments */
@@ -86,6 +102,7 @@ Do_It:
     "(l1,l2) = Label" i
     if l1 /= null then iterate /* skip is it has a label */
     parse value d with name':'.
+    if pos('(',name) > 0 then iterate
     name = translate(name,' ','0123456789$@#')
     if pos('_',name) > 0 then do
       name = translate(name,' ','_')
