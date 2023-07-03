@@ -18,6 +18,7 @@
 )Init
 .zvars = '(hiden)'
  &zwinttl = 'SAVELAB Command Prompt'
+ .help = #savelab
 )Proc
  if (&hiden NE &Z)
     &zcmd = 'HIDE'

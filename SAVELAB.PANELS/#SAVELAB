@@ -156,4 +156,7 @@
 +  names of the active labels, then they are worth using.
 +
 % Inspired by John Kalinich
+)Init
+ &zup   = #SAVELAB
+ &zcont = #SAVELAB
 )End
