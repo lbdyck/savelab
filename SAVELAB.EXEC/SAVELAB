@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.15"
+  ver = "2.16"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -109,6 +109,8 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            07/03/23 - 2.16 by Lionel Dyck                  *
+  *                     - Upper cse 1st char in all procedures *
   *            07/12/22 - 2.15 by Lionel Dyck                  *
   *                     - If entered from external then do not *
   *                       enable save/end aliases              *
@@ -415,7 +417,7 @@ Do_Restore:
   /* -------------- *
   | Close and Exit |
   * -------------- */
-Close_out:
+Close_Out:
   Address ISPExec
   'tbclose savelab replcopy library(ispprof)'
   address isredit
@@ -514,7 +516,7 @@ Do_Show:
   | Show ALL routine will display a table of all saved dataset labels |
   | with the option to D (delete) or to S (show) the labels.          |
   * ----------------------------------------------------------------- */
-do_showall:
+Do_Showall:
   satab = 'sa'random(9999)
   '(loc) = cursor'
   Address ISPExec
