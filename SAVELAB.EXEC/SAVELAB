@@ -240,19 +240,25 @@
 
   Address ISPExec 'Control Errors Return'
 
+  /* -------------------------------- *
+   | Define the ISPF Edit environment |
+   * -------------------------------- */
+  Address ISREdit
+  "Macro (option) NOPROCESS"
+
   /* -------------------------------------------- *
    | Test if called by someone other than SAVELAB |
    | such as REXXLAB, or ?                        |
    * -------------------------------------------- */
   Address ISPExec 'vget (zeditcmd)'
   zeditcmd = translate(zeditcmd)
-  if word(zeditcmd,1) /= 'SAVELAB' then external = 1
-
-  /* -------------------------------- *
-   | Define the ISPF Edit environment |
-   * -------------------------------- */
+  if word(zeditcmd,1) /= 'SAVELAB' then do
+      external = 1
+      if words(zeditcmd) = 1 then
+      if wordpos(zeditcmd,'SAVE END') = 0
+      then option = 'LI'
+      end
   Address ISREdit
-  "Macro (option) NOPROCESS"
 
   /* ----------------------- *
    | Check for View and SCLM |
@@ -300,6 +306,7 @@
     'rempop'
     if rc > 0 then call close_out
     option = zcmd hiden
+    trace '?I'
     if wordpos(zcmd,'EXPORT IMPORT') > 0 then do
       'addpop row(4) column(4)'
       'display panel(savelabx)'
@@ -370,6 +377,7 @@
 
     Otherwise nop
   end
+  if option /= null then call close_out
 
   /* ------------------------ *
   | Restore Labels - default |
@@ -499,9 +507,6 @@ Do_Save:
     call close_out
   end
   else do
-    /* Comment Start
-    'reset'
-       Comment End */
     '(last) = linenum .zlast'
     do while rc = 0
       "(line) = Display_Lines"
