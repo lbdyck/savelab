@@ -1,27 +1,39 @@
-/* --------------------  rexx procedure  -------------------- *
- | Name:      SaveLabS                                        |
- |                                                            |
- | Function:  ISPF Edit Macro to Save all Labels and then     |
- |            Save the member and Save the Edit Session.      |
- |                                                            |
- | Dependencies:  Enabled as an ALIAS of Save when the        |
- |                SAVELAB macro is used to save or restore    |
- |                labels.                                     |
- |                                                            |
- | Author:    Lionel B. Dyck                                  |
- |                                                            |
- | History:  (most recent on top)                             |
- |            01/30/20 - Creation (from savelabe)             |
- |                                                            |
- * ---------------------------------------------------------- */
+  /* --------------------  rexx procedure  -------------------- *
+  | Name:      SaveLabS                                        |
+  |                                                            |
+  | Function:  ISPF Edit Macro to Save all Labels and then     |
+  |            Save the member and Save the Edit Session.      |
+  |                                                            |
+  | Dependencies:  Enabled as an ALIAS of Save when the        |
+  |                SAVELAB macro is used to save or restore    |
+  |                labels.                                     |
+  |                                                            |
+  | Author:    Lionel B. Dyck                                  |
+  |                                                            |
+  | History:  (most recent on top)                             |
+  |            07/07/23 - Ignore if under View                 |
+  |            01/30/20 - Creation (from savelabe)             |
+  |                                                            |
+  * ---------------------------------------------------------- */
   Address ISREDIT
   "MACRO"
 
-/* -------------------------------------- *
- | Invoke Savelab Save to save all labels |
- * -------------------------------------- */
+  /* ------------------------------ *
+  | Test if under View then ignore |
+  * ------------------------------ */
+  '(view,sclm) = Session'
+  if view = 'VIEW' then do
+    zedsmsg = ''
+    zedlmsg = 'Save is not supported by Savelab under View.'
+    Address ISPExec 'Setmsg msg(isrz001)'
+    exit 1
+  end
+
+  /* -------------------------------------- *
+  | Invoke Savelab Save to save all labels |
+  * -------------------------------------- */
   "SaveLab Save"
-/* ------------------- *
- | Now Save the Member |
- * ------------------- */
+  /* ------------------- *
+  | Now Save the Member |
+  * ------------------- */
   "BUILTIN SAVE"

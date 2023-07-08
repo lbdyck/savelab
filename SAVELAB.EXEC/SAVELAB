@@ -52,7 +52,8 @@
   *                       but will enable automatic saving     *
   *            SAVE     - save all labels                      *
   *            SHOW     - alias of LIST                        *
-  *            SHOW ALL - display the ISPF table               *
+  *            SHOWALL  - display the ISPF table               *
+  *                     - or SHOW ALL                          *
   *                                                            *
   *            Abbreviations:                                  *
   *            E        - Export dsn                           *
@@ -105,12 +106,20 @@
   *         5. Using the ISPF Compare, and some other tools,   *
   *            can insert additional labels that you may not   *
   *            want to save - just beware.                     *
+  *         6. When used under SCLM the Save and End command   *
+  *            aliases are *not* set.                          *
   *                                                            *
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
-  *            07/03/23 - 2.16 by Lionel Dyck                  *
-  *                     - Upper cse 1st char in all procedures *
+  *            07/07/23 - 2.16 by Lionel Dyck                  *
+  *                     - Check if View then no save           *
+  *                     - Remove 'reset' during savelab save   *
+  *                     - Improve the no saved labels found msg*
+  *            07/05/23 - 2.16 by Lionel Dyck                  *
+  *                     - Check if under SCLM and don't alias  *
+  *                       SAVE or END                          *
+  *                     - Uppercase 1st char in all procedures *
   *            07/12/22 - 2.15 by Lionel Dyck                  *
   *                     - If entered from external then do not *
   *                       enable save/end aliases              *
@@ -225,19 +234,32 @@
   * ---------------------------------------------------------- */
   Parse source a b MacName c
 
-  parse value '' with null free_labset quiet imac external
+  parse value '' with null free_labset quiet imac external sclm
   export  = 0
   noreset = 0
 
   Address ISPExec 'Control Errors Return'
 
+  /* -------------------------------------------- *
+   | Test if called by someone other than SAVELAB |
+   | such as REXXLAB, or ?                        |
+   * -------------------------------------------- */
+  Address ISPExec 'vget (zeditcmd)'
+  zeditcmd = translate(zeditcmd)
+  if word(zeditcmd,1) /= 'SAVELAB' then external = 1
+
+  /* -------------------------------- *
+   | Define the ISPF Edit environment |
+   * -------------------------------- */
   Address ISREdit
   "Macro (option) NOPROCESS"
-  if rc > 0 then do
-     arg option
-     Address ISREdit
-     external = 1
-     end
+
+  /* ----------------------- *
+   | Check for View and SCLM |
+   * ----------------------- */
+   Check_View_SCLM:
+  '(view,sclm) = Session'
+  if view = 'VIEW' then external = 1
 
   /* ----------------------------------- *
   * Get the current data set and member *
@@ -302,6 +324,9 @@
    * ----------------------- */
   if imac = null then call define_alias
 
+  /* ------------------------- *
+   | Check for SAVELAB command |
+   * ------------------------- */
   Select
     When abbrev("SAVE",option,1) = 1 then
       call do_save
@@ -331,6 +356,9 @@
 
     When abbrev("SHOW",word(option,1),2) = 1 then
     call do_show
+
+    When word(option,1) = 'SHOWALL' then
+    call do_showall
 
     When abbrev("IMAC",translate(option),1) = 1 then do
       imac = 1
@@ -373,6 +401,7 @@ Do_Restore:
   '(loc) = cursor'
   if ropt = null then
   if noreset = 0
+  then if sclm = null
   then "Reset All"
   address ispexec
   'tbtop savelab'
@@ -388,7 +417,7 @@ Do_Restore:
   Address ISREdit
   if ours = null then do
     if quiet /= 1 then do
-      msg =  'No labels found for:' key
+      msg =  'No saved labels found for:' key
       "Line_before" loc "=  msgline (msg)"
       'locate' loc -1
     end
@@ -431,12 +460,14 @@ Define_Alias:
      'DEFINE COMPARE RESET'
      "DEFINE savelabc MACRO CMD"
      "DEFINE COMPARE ALIAS savelabc"
-     'DEFINE END RESET'
-     "DEFINE savelabe MACRO CMD"
-     "DEFINE END ALIAS savelabe"
-     'DEFINE SAVE RESET'
-     "DEFINE savelabs MACRO CMD"
-     "DEFINE SAVE ALIAS savelabs"
+     if sclm /= 'SCLM' then do
+        'DEFINE END RESET'
+        "DEFINE savelabe MACRO CMD"
+        "DEFINE END ALIAS savelabe"
+        'DEFINE SAVE RESET'
+        "DEFINE savelabs MACRO CMD"
+        "DEFINE SAVE ALIAS savelabs"
+        end
      end
   'DEFINE SL RESET'
   "DEFINE savelab MACRO CMD"
@@ -451,6 +482,12 @@ Define_Alias:
   * Save all existing labels *
   * ------------------------ */
 Do_Save:
+  if view = 'VIEW' then do
+    zedsmsg = ''
+    zedlmsg = 'Save is not supported by Savelab under View.'
+    Address ISPExec 'Setmsg msg(isrz001)'
+    exit 1
+  end
   count = 0
   save = null
   saverest = 1
@@ -462,7 +499,9 @@ Do_Save:
     call close_out
   end
   else do
+    /* Comment Start
     'reset'
+       Comment End */
     '(last) = linenum .zlast'
     do while rc = 0
       "(line) = Display_Lines"

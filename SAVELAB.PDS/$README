@@ -123,10 +123,10 @@ Overview
 
 ## Bonus
 
-Included with SAVELAB is another Edit command (macro) designed
-specifically for use with REXX source code.
+Included with SAVELAB are two additional Edit commands (macro) designed
+specifically for use with REXX source code and COBOL source code.
 
-That command is **REXXLAB** which will create ISPF Edit Labels for
+That first command is **REXXLAB** which will create ISPF Edit Labels for
 every sub-routine name within the REXX code. Existing labels are
 retained and new labels created - then SAVELAB LIst is invoked.
 
@@ -154,3 +154,6 @@ Existing labels will be unchanged.
 
 Duplicate labels will have a suffix of A, B, ... appended if possible.
 * if label is 5 chars then last removed and the suffix appended.
+
+The second is **COBLAB** which does the same as **REXXLAB** but with
+COBOL source code.

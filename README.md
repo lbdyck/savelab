@@ -1,22 +1,23 @@
-# SAVELAB - Save, Restore, and Manage saved ISPF Edit Labels
-
 Welcome to the SAVELAB Package - see the Overview below for more
 information on SAVELAB.
 
-Note: If you downloaded from github then ignore the $RECV **but** you should
-look at using zigi for the clone and installation.
+Note: If you downloaded from github then ignore the $RECV but you
+      should look at using zigi (https://zigi.rocks) for the clone
+      and installation.
 
 This dataset contains the following members (which have meaningful ISPF
 stat userids):
 
    $README  - what you are reading
    $README2 - migration information from a pre-2.0 release
-   $RECV    - exec to run to expand the xmit members
+   $RECV ** - exec to run to expand the xmit members
    $WHY     - brief why use ISPF Edit Labels
    @MSG     - TSO Transmit message text
-   EXEC     - TSO Transmit (XMIT) REXX library
-   EXPORT   - SAVELAB export of the Savelab labels
-   PANELS   - TSO Transmit (XMIT) ISPF Panels Library
+   EXEC *   - TSO Transmit (XMIT) REXX library
+   EXPORT * - SAVELAB export of the Savelab labels
+   PANELS * - TSO Transmit (XMIT) ISPF Panels Library
+   * these members do not exist in the git repository version
+   ** this is not required with the git repository version
 
 After installing SAVELAB to experiment Edit the SAVELAB exec and use the
 command SAVELAB IMP dsn(SAVELAB) to restore the Edit Labels for it
@@ -104,11 +105,8 @@ Overview
                An Export will force a SAVELAB Save before
                doing an export.
 
-  Notes:
-  
-            1. If the ISPF Session abnormally terminates the
+  Notes:    1. If the ISPF Session abnormally terminates the
                updates may not be saved in the table.
-               
             2. This code may be installed using a different
                name if SAVELAB is too long (e.g. SL)
                - if you do that then you MUST rename the
@@ -117,21 +115,18 @@ Overview
                  it defines an alias of SL for SAVELAB
             3. All members/labels info is saved in a table
                in the users ISPF Profile dataset.
-               
             4. The same member in different data sets MAY be
                processed with No Conflicts.
-               
             5. Using the ISPF Compare, and some other tools,
                can insert additional labels that you may not
                want to save - just beware.
-               
 
 ## Bonus
 
-Included with SAVELAB is another Edit command (macro) designed
-specifically for use with REXX source code.
+Included with SAVELAB are two additional Edit commands (macro) designed
+specifically for use with REXX source code and COBOL source code.
 
-That command is **REXXLAB** which will create ISPF Edit Labels for
+That first command is **REXXLAB** which will create ISPF Edit Labels for
 every sub-routine name within the REXX code. Existing labels are
 retained and new labels created - then SAVELAB LIst is invoked.
 
@@ -140,17 +135,17 @@ Routine labels are for routines that start with text and end with a :
 The label will be the 1st letter of each part of the routine or the 1st
 5 chars of routine name.
 
-If the label is 5 characters, or less, then it will be used as is.                      
-                                            
-If the label with _ removed and combined is 5 characters, or less, 
-then it will be used. 
- 
-### Examples:                                   
-     DoIt:        ->    .doit
-     Do_It:       ->    .doit
-     Do_It12:     ->    .doit
-     Do_Another:  ->    .doano
-     DoSomething: ->    .dosom
+If the label is 5 characters, or less, then it will be used as is.
+
+If the label with _ removed and combined is 5 characters, or less, then
+it will be used.
+
+    Examples:
+        DoIt:        ->    .doit
+        Do_It:       ->    .doit
+        Do_It12:     ->    .doit
+        Do_Another:  ->    .doano
+        DoSomething: ->    .dosom
 
 Routine labels with numbers or special chars will be have them
 translated to blanks.
@@ -159,3 +154,6 @@ Existing labels will be unchanged.
 
 Duplicate labels will have a suffix of A, B, ... appended if possible.
 * if label is 5 chars then last removed and the suffix appended.
+
+The second is **COBLAB** which does the same as **REXXLAB** but with
+COBOL source code.

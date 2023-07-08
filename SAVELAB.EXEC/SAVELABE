@@ -11,11 +11,19 @@
  | Author:    Lionel B. Dyck                                  |
  |                                                            |
  | History:  (most recent on top)                             |
+ |            07/07/23 - If under View then just End          |
+ |                       and don't save any labels            |
  |            08/31/18 - Creation                             |
  |                                                            |
  * ---------------------------------------------------------- */
   Address ISREDIT
   "MACRO"
+
+  /* ---------------------------- *
+  | Test if under View then End  |
+  * ---------------------------- */
+  '(view,sclm) = Session'
+  if view = 'VIEW' then 'BUILTIN END'
 
 /* -------------------------------------- *
  | Invoke Savelab Save to save all labels |

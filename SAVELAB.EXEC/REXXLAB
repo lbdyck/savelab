@@ -36,10 +36,13 @@
   |                the suffix appended.                        |
   |                                                            |
   | Dependencies:  Designed for use with REXX code             |
+  |                Requires the SAVELAB package                |
   |                                                            |
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2023/07/08 LBD - More comments and labels       |
+  |            2023/07/07 LBD - Enable Edit Hiliting           |
   |            2023/06/30 LBD - fix only use : in 1st word     |
   |                             and ignore in comments         |
   |            2022/07/23 LBD - two fixes                      |
@@ -67,26 +70,27 @@
 
 Start:
   '(last)  = linenum .zlast'
+  call set_hilite
   call get_labels
   call check_loadispf
 
 Do_It:
   do i = 1 to last
     if listart > 0 then do
-       if i > listart
-       then if i < liend
-       then iterate
-       end
+      if i > listart
+      then if i < liend
+      then iterate
+    end
     '(d) = line' i
     if comment /= null then
-       if pos('*/',d) > 0 then comment = null
+    if pos('*/',d) > 0 then comment = null
     if pos('/*',d) > 0 then do
-       comment = 1
-       if pos(':',d) < pos('/*',d) then do
-          comment = 1
-          if pos('*/',d) > pos('/*',d) then comment = null
-          end
-       end
+      comment = 1
+      if pos(':',d) < pos('/*',d) then do
+        comment = 1
+        if pos('*/',d) > pos('/*',d) then comment = null
+      end
+    end
     if comment = 1 then iterate
     if right(word(d,1),1) /= ':' then iterate
 
@@ -131,7 +135,7 @@ DoneWithTheTask:
   Address ISPExec ,
     'Setmsg msg(isrz001)'
   x = savelab('LI')
-  exit
+  exit 1
 
 Fixup_Label:
   Select
@@ -160,6 +164,17 @@ Fixup_Label:
   end
   return
 
+  /* ---------------------- *
+  | Enable HILITE features |
+  * ---------------------- */
+Set_Hilite:
+  'hilite off'
+  'hilite logic rexx paren find search cursor'
+  return
+
+  /* --------------------------------- *
+  | Get all currently assigned labels |
+  * --------------------------------- */
 Get_Labels:
   "Locate Label First"
   if rc > 0 then return
