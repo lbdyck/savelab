@@ -29,10 +29,11 @@ There are two options for the installation.
 Then:
 
 1. Copy the `savelab.exec` members into your SYSEXEC, or SYSPROC, library.
-2. Copy the `savelab.panels` members into your ISPF Panels library that is allocated to ISPPLIB.
+2. Copy the `savelab.panels` members into your ISPF Panels library that is
+   allocated to ISPPLIB.
 
 After installing SAVELAB to experiment Edit the SAVELAB exec and use the
-command SAVELAB IMP dsn(SAVELAB) to restore the Edit Labels for it
+command SAVELAB IMP savelab.export to restore the Edit Labels for it
 (where dsn is the restored dataset name for the EXPORT dataset).
 
 ## Overview
