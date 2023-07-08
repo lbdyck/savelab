@@ -19,11 +19,23 @@ stat userids):
    * these members do not exist in the git repository version
    ** this is not required with the git repository version
 
+### Installation Options
+
+There are two options for the installation.
+
+1. Clone the repository using ZIGI
+2. Use the zginstall.rex (see zginstall.readme for instructions)
+
+Then:
+
+1. Copy the `savelab.exec` members into your SYSEXEC, or SYSPROC, library.
+2. Copy the `savelab.panels` members into your ISPF Panels library that is allocated to ISPPLIB.
+
 After installing SAVELAB to experiment Edit the SAVELAB exec and use the
 command SAVELAB IMP dsn(SAVELAB) to restore the Edit Labels for it
 (where dsn is the restored dataset name for the EXPORT dataset).
 
-Overview
+## Overview
 
    Name:      SAVELAB
 
