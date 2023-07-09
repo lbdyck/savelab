@@ -24,7 +24,12 @@ stat userids):
 There are two options for the installation.
 
 1. Clone the repository using ZIGI
-2. Use the zginstall.rex (see zginstall.readme for instructions)
+2. If using Git only use the zginstall.rex (see zginstall.readme for
+   instructions)
+3. If you have the SAVELAB.XMIT or have CBT File 313 member SAVELAB
+   - Issue RECEIVE INDS(savelab.xmit or cbt.file313.pds(savelab))
+   - Execute member $RECV in the savelab.pds to recreate the savelab
+     libraries
 
 Then:
 

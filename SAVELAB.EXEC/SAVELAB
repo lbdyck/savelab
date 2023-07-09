@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.16"
+  ver = "2.17"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -112,6 +112,8 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            07/09/23 - 2.17 by Lionel Dyck                  *
+  *                     - Cleanup of useless code (some)       *
   *            07/07/23 - 2.16 by Lionel Dyck                  *
   *                     - Check if View then no save           *
   *                     - Remove 'reset' during savelab save   *
@@ -252,12 +254,8 @@
    * -------------------------------------------- */
   Address ISPExec 'vget (zeditcmd)'
   zeditcmd = translate(zeditcmd)
-  if word(zeditcmd,1) /= 'SAVELAB' then do
+  if word(zeditcmd,1) /= 'SAVELAB' then
       external = 1
-      if words(zeditcmd) = 1 then
-      if wordpos(zeditcmd,'SAVE END') = 0
-      then option = 'LI'
-      end
   Address ISREdit
 
   /* ----------------------- *
@@ -306,7 +304,6 @@
     'rempop'
     if rc > 0 then call close_out
     option = zcmd hiden
-    trace '?I'
     if wordpos(zcmd,'EXPORT IMPORT') > 0 then do
       'addpop row(4) column(4)'
       'display panel(savelabx)'
@@ -549,7 +546,7 @@ Do_Save:
   call close_out
 
   /* ------------------------------------- *
-  * Show current label variable           *
+  * Show current label variable - alias L  *
   * ------------------------------------- */
 Do_Show:
   if abbrev('ALL',word(option,2),1) = 1 then call do_showall
