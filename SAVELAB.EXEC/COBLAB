@@ -32,6 +32,7 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2023/07/10 LBD - Handle more Cobol labels       |
   |            2023/07/08 LBD - Add more comments              |
   |            2023/07/07 MRM - Streamlined parsing            |
   |            2023/07/07 LBD - Creation from REXXLAB          |
@@ -52,7 +53,7 @@
   /* ------------------- *
    | Define our defaults |
    * ------------------- */
-  parse value '' with null lab.
+  parse value '' with null lab. data
   count   = 0
   current = 0
   alpha   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -95,11 +96,18 @@ Do_It:
     d = translate(d)
 
     parse var d w1 w2 w3 '.' .
+    if word(strip(d),1) = 'PROCEDURE' then data = null
+    if data = 1 then iterate
+    if left(strip(d),14) = 'DATA DIVISION.' then data = 1
     if pos(w1, ignore_para) > 0 then
       iterate
+    if pos('-',w1) > 0 then do
+       parse value w1 with .'-'w1
+       end
     /* Skip 01, 66, 77, 88 levels */
     if datatype(w1) == "NUM" then
-      iterate
+      if pos(w1,d) > 11 then iterate
+         else parse value w1 with . w1
     if wordpos(w1,'FD SD') > 0 then
       iterate
     if w2 == 'SECTION' then
