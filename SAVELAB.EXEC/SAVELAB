@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.17"
+  ver = "2.18"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -112,6 +112,8 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            07/10/23 - 2.18 by Lionel Dyck                  *
+  *                     - Bug Fix - honor passed parms         *
   *            07/09/23 - 2.17 by Lionel Dyck                  *
   *                     - Cleanup of useless code (some)       *
   *            07/07/23 - 2.16 by Lionel Dyck                  *
@@ -234,7 +236,7 @@
   *            07/01/03 - Creation                             *
   *                                                            *
   * ---------------------------------------------------------- */
-  Parse source a b MacName c
+  Arg Parms
 
   parse value '' with null free_labset quiet imac external sclm
   export  = 0
@@ -247,6 +249,8 @@
    * -------------------------------- */
   Address ISREdit
   "Macro (option) NOPROCESS"
+
+  if parms /= null then option = parms
 
   /* -------------------------------------------- *
    | Test if called by someone other than SAVELAB |
