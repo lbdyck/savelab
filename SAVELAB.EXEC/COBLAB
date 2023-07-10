@@ -63,7 +63,8 @@
   * ------------------------ */
   ignore_sect = null
   ignore_para = 'CBL PROGRAM-ID INSTALLATION DATE-WRITTEN',
-   'DATE-COMPILED REMARKS SOURCE-COMPUTER OBJECT-COMPUTER'
+   'DATE-COMPILED REMARKS SOURCE-COMPUTER OBJECT-COMPUTER',
+   'AUTHOR'
 
   /* -------------------- *
    | Start the processing |
