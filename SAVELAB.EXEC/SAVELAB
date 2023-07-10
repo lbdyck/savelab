@@ -301,8 +301,6 @@
   /* ------------------------------ *
   * Process the Edit Macro options *
   * ------------------------------ */
-  option = translate(option)
-
   if option = '?' then do
     'addpop row(4) column(4)'
     'display panel(savelab)'
@@ -325,7 +323,7 @@
 
   if wordpos('QUIET',option) > 0 then do
     quiet = 1
-    p = wordpos('QUIET',translate(option))
+    p = wordpos('QUIET',option)
     option = strip(delword(option,p,1))
   end
 
@@ -359,7 +357,7 @@
     When option = 'LS' then
     call do_lists
 
-    When abbrev("NORESET",translate(option),1) = 1 then do
+    When abbrev("NORESET",option,1) = 1 then do
       noreset = 1
       quiet = 1
     end
@@ -370,7 +368,7 @@
     When word(option,1) = 'SHOWALL' then
     call do_showall
 
-    When abbrev("IMAC",translate(option),1) = 1 then do
+    When abbrev("IMAC",option,1) = 1 then do
       imac = 1
       quiet = 1
     end
