@@ -97,7 +97,14 @@ Do_It:
 
     parse var d w1 w2 w3 '.' .
     if word(strip(d),1) = 'PROCEDURE' then data = null
-    if data = 1 then iterate
+    if data = 1 then
+       if w1 /= 'WORKING-STORAGE'
+          then iterate
+          else do
+               w1 = 'WORKING'
+               w2 = 'STORAGE'
+               w3 = 'SECTION.'
+               end
     if left(strip(d),14) = 'DATA DIVISION.' then data = 1
     if pos(w1, ignore_para) > 0 then
       iterate
