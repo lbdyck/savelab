@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.18"
+  ver = "2.19"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -112,6 +112,8 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            07/10/23 - 2.19 by Lionel Dyck                  *
+  *                     - Clean up messaging (thx Ray)         *
   *            07/10/23 - 2.18 by Lionel Dyck                  *
   *                     - Bug Fix - honor passed parms         *
   *            07/09/23 - 2.17 by Lionel Dyck                  *
@@ -465,8 +467,10 @@ Close_Out:
   | Define the END Alias to SAVELABE |
   * -------------------------------- */
 Define_Alias:
+  no_def_al = 0
   if external = null then do
      'DEFINE COMPARE RESET'
+     if rc = 0 then no_def_al = 1
      "DEFINE savelabc MACRO CMD"
      "DEFINE COMPARE ALIAS savelabc"
      if sclm /= 'SCLM' then do
@@ -479,10 +483,11 @@ Define_Alias:
         end
      end
   'DEFINE SL RESET'
+  if rc = 0 then no_def_al = 1
   "DEFINE savelab MACRO CMD"
   "DEFINE SL   ALIAS savelab"
   if noreset = 1 then return
-  if quiet   = 1 then return
+  if no_def_al = 1 then return
   text = 'SL may be used as an alias of SAVELAB'
   'line_before 1 = msgline (text)'
   Return
