@@ -32,6 +32,8 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2023/07/10 MRM - Fix bugs and remove now-       |
+  |                             unneeded code                  |
   |            2023/07/10 LBD - Handle more Cobol labels       |
   |            2023/07/08 LBD - Add more comments              |
   |            2023/07/07 MRM - Streamlined parsing            |
@@ -39,6 +41,7 @@
   |                                                            |
   * ---------------------------------------------------------- */
   signal on novalue
+  signal on halt
   parse source . . s3 .
   Address ISREdit
   'Macro (options)'
@@ -62,9 +65,11 @@
   | Common labels to ignore: |
   * ------------------------ */
   ignore_sect = null
-  ignore_para = 'CBL PROGRAM-ID INSTALLATION DATE-WRITTEN',
-   'DATE-COMPILED REMARKS SOURCE-COMPUTER OBJECT-COMPUTER',
-   'AUTHOR'
+  ignore_para = 'PROGRAM-ID CLASS-ID FACTORY OBJECT METHOD-ID',
+   'AUTHOR INSTALLATION DATE-WRITTEN DATE-COMPILED SECURITY',
+   'REMARKS SOURCE-COMPUTER OBJECT-COMPUTER FD SD BASIS',
+   'CBL PROCESS *CBL *CONTROL DELETE EJECT INSERT SKIP1 SKIP2',
+   'SKIP3 TITLE'
 
   /* -------------------- *
    | Start the processing |
@@ -90,48 +95,55 @@ Do_It:
     '(d) = line' i
     if cobol = 0 then d = substr(d, 7, 66)
     else d = left(d, 66)
-    if pos(left(d,1),'*-/') > 0 then iterate
+
+    /* Anything in indicator area is a comment or a continuation */
+    if pos(left(d,1),'*-/') > 0 then
+      iterate
+
+    /* If Area A is empty, there's no paragraph */
+    if substr(d, 2, 4) == '    ' then
+      iterate
+
+    /* Ignore if initial floating comment */
+    if pos(' *>', d) > 0 then
+      iterate
+
+    /* Ignore if no period */
     if pos('.',d) = 0 then iterate
-    if left(d, 4) = ' ' then iterate
 
     d = translate(d)
 
     parse var d w1 w2 w3 '.' .
-    if word(strip(d),1) = 'PROCEDURE' then data = null
-    if data = 1 then
-       if w1 /= 'WORKING-STORAGE'
-          then iterate
-          else do
-               w1 = 'WORKING'
-               w2 = 'STORAGE'
-               w3 = 'SECTION.'
-               end
-    if left(strip(d),14) = 'DATA DIVISION.' then data = 1
+
+    /* Ignore certain paragraphs */
     if pos(w1, ignore_para) > 0 then
       iterate
-    if pos('-',w1) > 0 then do
-       parse value w1 with .'-'w1
-       end
+
     /* Skip 01, 66, 77, 88 levels */
     if datatype(w1) == "NUM" then
-      if pos(w1,d) > 11 then iterate
-         else parse value w1 with . w1
-    if wordpos(w1,'FD SD') > 0 then
       iterate
+
+    /* Ignore certain sections */
     if w2 == 'SECTION' then
       if pos(w1, ignore_sect) > 0 then
         iterate
     if verify(w1, '-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789') > 0 then
+      iterate
+    /* PROC DIV paragraphs can be all-numeric. Skip those. */
+    if datatype(w1) == "NUM" then
       iterate
     name = space(w1 w2 w3)
 
     if pos(' . ',d) > 0 then iterate
 
     "(l1,l2) = Label" i
-    if l1 /= null then iterate /* skip is it has a label */
+    if l1 /= null then iterate /* skip as it has a label */
 
+    /* Trim any USING clause */
     if pos('PROCEDURE DIVISION',name) > 0
        then name = space(subword(name,1,2))
+
+    /* Remove all numerics and hyphens, then build label */
     name = translate(name,' ',"0123456789-")
     if words(name) > 1 then do
       label = null
@@ -163,6 +175,7 @@ DoneWithTheTask:
     'Setmsg msg(isrz001)'
   x = savelab('LI')
 
+Halt:
   Exit 1
 
 Fixup_Label:
