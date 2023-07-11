@@ -5,6 +5,14 @@ Note: If you downloaded from github then ignore the $RECV but you
       should look at using zigi (https://zigi.rocks) for the clone
       and installation.
 
+Note 2: The three REXX Execs: COBLAB, REXXLAB, and SAVELAB all have
+        labels saved in the savelab.export file. Use the command
+        `savelab import savelab.export` to reapply and then
+        `savelab save` to save the labels in your ISPF table.
+
+        By doing this you keep the labels active and usable in case
+        you make changes.
+
 This dataset contains the following members (which have meaningful ISPF
 stat userids):
 
