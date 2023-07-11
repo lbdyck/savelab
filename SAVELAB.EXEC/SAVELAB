@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.19"
+  ver = "2.20"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -112,6 +112,8 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            07/10/23 - 2.20 by Ray Mullins                  *
+  *                     - Issue error message on invalid parm  *
   *            07/10/23 - 2.19 by Lionel Dyck                  *
   *                     - Clean up messaging (thx Ray)         *
   *            07/10/23 - 2.18 by Lionel Dyck                  *
@@ -267,7 +269,7 @@
   /* ----------------------- *
    | Check for View and SCLM |
    * ----------------------- */
-   Check_View_SCLM:
+ Check_View_SCLM:
   '(view,sclm) = Session'
   if view = 'VIEW' then external = 1
 
@@ -376,7 +378,14 @@
     When abbrev("WHY",option,1) = 1 then
     call do_help
 
-    Otherwise nop
+    Otherwise do
+      zerrsm = "Invalid parm."
+      zerrlm = option "is an invalid parm."
+      zerralrm = 'YES'
+      zerrhm = "#SAVELAB"
+      Address ISPExec 'Setmsg msg(ISRZ002)'
+    end /* otherwise */
+
   end
   if option /= null then call close_out
 
@@ -450,7 +459,7 @@ Do_Restore:
   end
   if loc = 1 then loc = 0
   'locate' loc
-  call close_out
+  /*call close_out*/
 
   /* -------------- *
   | Close and Exit |
@@ -484,6 +493,7 @@ Define_Alias:
   if rc = 0 then no_def_al = 1
   "DEFINE savelab MACRO CMD"
   "DEFINE SL   ALIAS savelab"
+  zerrsm = null; zerrlm = null /* clear messages */
   if noreset = 1 then return
   if no_def_al = 1 then return
   text = 'SL may be used as an alias of SAVELAB'
