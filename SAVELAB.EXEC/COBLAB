@@ -48,14 +48,14 @@
   Address ISPEXEC 'CONTROL ERRORS RETURN'
 
   /* ---------------------- *
-   | Enable HILITE features |
-   * ---------------------- */
+  | Enable HILITE features |
+  * ---------------------- */
   'hilite off'
   'hilite logic cobol paren find search cursor'
 
   /* ------------------- *
-   | Define our defaults |
-   * ------------------- */
+  | Define our defaults |
+  * ------------------- */
   parse value '' with null lab. data
   count   = 0
   current = 0
@@ -66,30 +66,30 @@
   * ------------------------ */
   ignore_sect = null
   ignore_para = 'PROGRAM-ID CLASS-ID FACTORY OBJECT METHOD-ID',
-   'AUTHOR INSTALLATION DATE-WRITTEN DATE-COMPILED SECURITY',
-   'REMARKS SOURCE-COMPUTER OBJECT-COMPUTER FD SD BASIS',
-   'CBL PROCESS *CBL *CONTROL DELETE EJECT INSERT SKIP1 SKIP2',
-   'SKIP3 TITLE'
+    'AUTHOR INSTALLATION DATE-WRITTEN DATE-COMPILED SECURITY',
+    'REMARKS SOURCE-COMPUTER OBJECT-COMPUTER FD SD BASIS',
+    'CBL PROCESS *CBL *CONTROL DELETE EJECT INSERT SKIP1 SKIP2',
+    'SKIP3 TITLE'
 
   /* -------------------- *
-   | Start the processing |
-   * -------------------- */
+  | Start the processing |
+  * -------------------- */
 Start:
   '(last)  = linenum .zlast'
   call get_labels
 
   /* ------------------------------------ *
-   | Determine if Numbering type is Cobol |
-   * ------------------------------------ */
+  | Determine if Numbering type is Cobol |
+  * ------------------------------------ */
 Check_Number:
-    '(v1,numtype) = number'
-    if wordpos('COBOL',numtype) > 0
-       then cobol = 1
-       else cobol = 0
+  '(v1,numtype) = number'
+  if wordpos('COBOL',numtype) > 0
+  then cobol = 1
+  else cobol = 0
 
   /* ------------------------------------------ *
-   | Do the actual process of generating labels |
-   * ------------------------------------------ */
+  | Do the actual process of generating labels |
+  * ------------------------------------------ */
 Do_It:
   do i = 1 to last
     '(d) = line' i
@@ -98,15 +98,15 @@ Do_It:
 
     /* Anything in indicator area is a comment or a continuation */
     if pos(left(d,1),'*-/') > 0 then
-      iterate
+    iterate
 
     /* If Area A is empty, there's no paragraph */
     if substr(d, 2, 4) == '    ' then
-      iterate
+    iterate
 
     /* Ignore if initial floating comment */
     if pos(' *>', d) > 0 then
-      iterate
+    iterate
 
     /* Ignore if no period */
     if pos('.',d) = 0 then iterate
@@ -117,21 +117,21 @@ Do_It:
 
     /* Ignore certain paragraphs */
     if pos(w1, ignore_para) > 0 then
-      iterate
+    iterate
 
     /* Skip 01, 66, 77, 88 levels */
     if datatype(w1) == "NUM" then
-      iterate
+    iterate
 
     /* Ignore certain sections */
     if w2 == 'SECTION' then
-      if pos(w1, ignore_sect) > 0 then
-        iterate
+    if pos(w1, ignore_sect) > 0 then
+    iterate
     if verify(w1, '-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789') > 0 then
-      iterate
+    iterate
     /* PROC DIV paragraphs can be all-numeric. Skip those. */
     if datatype(w1) == "NUM" then
-      iterate
+    iterate
     name = space(w1 w2 w3)
 
     if pos(' . ',d) > 0 then iterate
@@ -141,7 +141,7 @@ Do_It:
 
     /* Trim any USING clause */
     if pos('PROCEDURE DIVISION',name) > 0
-       then name = space(subword(name,1,2))
+    then name = space(subword(name,1,2))
 
     /* Remove all numerics and hyphens, then build label */
     name = translate(name,' ',"0123456789-")
@@ -163,8 +163,8 @@ Do_It:
   end i
 
   /* ------------------------------ *
-   | Done so tell the user and exit |
-   * ------------------------------ */
+  | Done so tell the user and exit |
+  * ------------------------------ */
 DoneWithTheTask:
   zedsmsg = null
   zedlmsg = left(count 'labels created with' current' existing.',75),
@@ -206,8 +206,8 @@ Fixup_Label:
   return
 
   /* ------------------------------ *
-   | Get the list of current labels |
-   * ------------------------------ */
+  | Get the list of current labels |
+  * ------------------------------ */
 Get_Labels:
   "Locate Label First"
   do while rc = 0
@@ -223,9 +223,9 @@ Get_Labels:
   return
 
   /* ---------------------------------- *
-   | Only used if variable has no value |
-   * ---------------------------------- */
+  | Only used if variable has no value |
+  * ---------------------------------- */
 novalue:
-say space(msgid.33 'NOVALUE raised for' condition('D') 'at line',
+  say space(msgid.33 'NOVALUE raised for' condition('D') 'at line',
     sigl 'in' s3)
-exit 8
+  exit 8

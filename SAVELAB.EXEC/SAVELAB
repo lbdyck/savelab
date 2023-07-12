@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.20"
+  ver = "2.21"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -112,6 +112,9 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            07/12/23 - 2.21 by Lionel Dyck                  *
+  *                     - Allow no parm - default to restore   *
+  *                       broke with 2.20                      *
   *            07/10/23 - 2.20 by Ray Mullins                  *
   *                     - Issue error message on invalid parm  *
   *            07/10/23 - 2.19 by Lionel Dyck                  *
@@ -337,6 +340,7 @@
   /* ------------------------- *
    | Check for SAVELAB command |
    * ------------------------- */
+  if option /= null then
   Select
     When abbrev("SAVE",option,1) = 1 then
       call do_save
