@@ -41,6 +41,7 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2023/07/06 LBD - Ignore labels starting with '" |
   |            2023/07/08 LBD - More comments and labels       |
   |            2023/07/07 LBD - Enable Edit Hiliting           |
   |            2023/06/30 LBD - fix only use : in 1st word     |
@@ -106,6 +107,7 @@ Do_It:
     "(l1,l2) = Label" i
     if l1 /= null then iterate /* skip is it has a label */
     parse value d with name':'.
+    if pos(left(name,1),"'"'"') > 0 then iterate
     if pos('(',name) > 0 then iterate
     name = translate(name,' ','0123456789$@#')
     if pos('_',name) > 0 then do
