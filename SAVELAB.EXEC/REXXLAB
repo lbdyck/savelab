@@ -113,7 +113,7 @@ Do_It:
     if pos('(',name) > 0 then iterate
     name = space(translate(name,' ','0123456789$@#'),0)
     if pos('_',name) > 0 then do
-      name = space(translate(name,' ','_'),0)
+      name = translate(name,' ','_')
       label = null
       if length(space(name,0)) < 6
       then label = space(name,0)
