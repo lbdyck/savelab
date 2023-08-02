@@ -41,6 +41,8 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2023/08/03 LBD - Fix labels with numbers        |
+  |                             e.g B2A resulted in a blank    |
   |            2023/07/06 LBD - Ignore labels starting with '" |
   |            2023/07/08 LBD - More comments and labels       |
   |            2023/07/07 LBD - Enable Edit Hiliting           |
@@ -109,9 +111,9 @@ Do_It:
     parse value d with name':'.
     if pos(left(name,1),"'"'"') > 0 then iterate
     if pos('(',name) > 0 then iterate
-    name = translate(name,' ','0123456789$@#')
+    name = space(translate(name,' ','0123456789$@#'),0)
     if pos('_',name) > 0 then do
-      name = translate(name,' ','_')
+      name = space(translate(name,' ','_'),0)
       label = null
       if length(space(name,0)) < 6
       then label = space(name,0)
