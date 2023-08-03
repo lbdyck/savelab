@@ -469,9 +469,8 @@ Do_Restore:
   | Close and Exit |
   * -------------- */
 Close_Out:
-  Address ISPExec
+  Address ISPExec ,
   'tbclose savelab replcopy library(ispprof)'
-  address isredit
   exit 1
 
   /* -------------------------------- *

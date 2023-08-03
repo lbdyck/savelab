@@ -41,6 +41,7 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2023/08/04 LBD - Support /* on label record     |
   |            2023/08/03 LBD - Fix labels with numbers        |
   |                             e.g B2A resulted in a blank    |
   |            2023/07/06 LBD - Ignore labels starting with '" |
@@ -89,13 +90,15 @@ Do_It:
     if pos('*/',d) > 0 then comment = null
     if pos('/*',d) > 0 then do
       comment = 1
+      if pos(':',d) > 0 then
       if pos(':',d) < pos('/*',d) then do
-        comment = 1
+        comment = 2
         if pos('*/',d) > pos('/*',d) then comment = null
       end
     end
     if comment = 1 then iterate
     if right(word(d,1),1) /= ':' then iterate
+    if comment = 2 then comment = 1
 
     /* now filter out some records */
     d = word(d,1)
