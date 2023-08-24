@@ -43,6 +43,7 @@
   | History:  (most recent on top)                             |
   |            2023/08/24 LBD - Fixup labels prefixed with Z   |
   |                             by replacing Z with A          |
+  |                             Ignore quoted /* */            |
   |            2023/08/04 LBD - Support comment on label record|
   |            2023/08/03 LBD - Fix labels with numbers        |
   |                             e.g B2A resulted in a blank    |
@@ -69,10 +70,12 @@
   'Macro (options)'
 
   parse value '' with null lab. comment
-  count   = 0
-  current = 0
-  listart = 0
-  alpha   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  count     = 0
+  current   = 0
+  listart   = 0
+  alpha     = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  left_com  = '615c'x
+  right_com = '5c61'x
 
 Start:
   '(last)  = linenum .zlast'
@@ -89,13 +92,13 @@ Do_It:
     end
     '(d) = line' i
     if comment /= null then
-    if pos('*/',d) > 0 then comment = null
-    if pos('/*',d) > 0 then do
+    if pos(right_com,d) > 0 then comment = null
+    if pos(left_com,d) > 0 then do
       comment = 1
       if pos(':',d) > 0 then
-      if pos(':',d) < pos('/*',d) then do
+      if pos(':',d) < pos(left_com,d) then do
         comment = 2
-        if pos('*/',d) > pos('/*',d) then comment = null
+        if pos(right_com,d) > pos(left_com,d) then comment = null
       end
     end
     if comment = 1 then iterate
@@ -105,7 +108,7 @@ Do_It:
     /* now filter out some records */
     d = word(d,1)
     colon = pos(':',d)
-    if pos('/*',d) > 1 then
+    if pos(left_com,d) > 1 then
     if colon > cmt then iterate  /* ignore comments */
     quote = pos("'",d)
     if quote > 1 then
@@ -137,6 +140,7 @@ Do_It:
     'label' i '= .'label 0
     count = count + 1
   end
+
 DoneWithTheTask:
   zedsmsg = null
   zedlmsg = left(count 'labels created with' current' existing.',75),
