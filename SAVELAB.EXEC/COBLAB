@@ -32,6 +32,8 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            2023/08/24 MRM - Fix labels starting with Z     |
+  |                             replacing with A               |
   |            2023/07/10 MRM - Fix bugs and remove now-       |
   |                             unneeded code                  |
   |            2023/07/10 LBD - Handle more Cobol labels       |
@@ -155,6 +157,9 @@ Do_It:
     end
     else label = strip(left(name,5))
     label = strip(left(translate(label),5))
+    if left(label,1) = 'Z' then do
+       label = 'A'substr(label,2)
+       end
     if lab.label = 1 then call fixup_label
 
     lab.label = 1
