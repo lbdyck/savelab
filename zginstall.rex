@@ -41,6 +41,13 @@
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            11/23/24 LBD - Check for NOCOZ DD               |
+  |            11/05/24 LBD - Correct ZGSTAT for 8 char userid |
+  |            09/28/24 LBD - Support 8 Char TSO Userid        |
+  |            05/14/24 LBD - Fix binary find in .gitattributes|
+  |            04/21/24 PJF - Support ascii to ebcdic tagging  |
+  |            02/16/24 LBD - Correct 2 bad chars x'05'        |
+  |            06/15/23 LBD - Add env ICONV_EBCDIC_ZOS_UNIX=1  |
   |            01/23/23 LBD - Add zgpop4 panel                 |
   |            01/21/23 LBD - Update zigistat subroutine       |
   |            05/16/22 LBD - Remove duplicate routines        |
@@ -74,7 +81,7 @@
   |            06/09/20 LBD - Creation from zigickot           |
   | ---------------------------------------------------------- |
   |    zigi - the z/OS ISPF Git Interface                      |
-  |    Copyright (C) 2020 - Henri Kuiper and Lionel Dyck       |
+  |    Copyright (C) 2020-2024 - Henri Kuiper and Lionel Dyck  |
   |                                                            |
   |    This program is free software: you can redistribute it  |
   |    and/or modify it under the terms of the GNU General     |
@@ -99,7 +106,17 @@
 
   ckothlq = strip(ckothlq)
 
-  x = bpxwunix('clear')
+  /* /bin/clear does not work for TERM=xterm-256color          */
+  /* If TERM=xterm-256color then invoke clear with TERM=xterm  */
+  x = bpxwunix('echo $TERM',,so.,se.)
+  curterm = strip(so.1)
+  if curterm = "xterm-256color" then do
+    env.0 = 1
+    env.1 = "TERM=xterm"
+    x = bpxwunix("clear",,,,env.)
+  end
+  else
+    x = bpxwunix('clear')
   say copies('-',73)
   say "                                         .zZ.     Zz "
   say "                    ZZZZZZZZ           ZZZZZZZ "
@@ -129,17 +146,40 @@
   env.1 = '_BPX_SHAREAS=MUST'
   env.2 = '_BPX_SPAWN_SCRIPT=YES'
   env.3 = '_EDC_ZERO_RECLEN=Y'
-  env.0 = 3
+  env.4 = 'ICONV_EBCDIC_ZOS_UNIX=1'
+  env.0 = 4
   cmd = 'pwd'
   x = bpxwunix(cmd,,so.,se.,env.)
   ckotdir = strip(so.1)
 
-  x = bpxwunix('command -v putpds',,so.,se.)
-  if so.0 = 0 then enhanced = 0
+  rc = bpxwdyn('INFO DD(NOCOZ)')
+  if rc /= 0 then do
+     enhanced = 0
+     say ' '
+     say 'Using OMVS cp.'
+     say ' '
+    end
   else do
-    enhanced = 1
-    putpds = so.1
+    x = bpxwunix('command -v putpds',,so.,se.)
+    if so.0 = 0 then enhanced = 0
+    else do
+      enhanced = 1
+      putpds = so.1
+      say ' '
+      say 'Using Dovetail Co:Z Toolkit putpds.'
+      say ' '
+    end
   end
+
+  /* -------------------------------------------------------------- *
+  | First check if the repository directory is an unzipped manual  |
+  | download or a git-supported directory, and if it is unzipped   |
+  | and needs conversion then do so according to the rules found   |
+  | in the .gitattributes file                                     |
+  * -------------------------------------------------------------- */
+  rc = ChkIfGIT(ckotdir)
+  if rc <> 0 & rc <> 4 & rc <> 8 then exit rc /* Conversion error */
+  if rc = 8 then exit rc /* Conversion not possible, see msgs */
 
 Restart:
   /* ------------------- *
@@ -452,6 +492,15 @@ zmsg:
   say '* 'left(message,63)' *'
   return
 
+  /* ---------------------- *
+   | ISPF Stat Userid Setup |
+   * ---------------------- */
+zlmmuser: procedure
+   arg uid
+   if length(uid) > 7
+      then return 'user8('uid')'
+      else return 'user('uid')'
+
   /* ----------------------------------------------------- */
   /* number format code thanks to Doug Nadel               */
   /* ----------------------------------------------------- */
@@ -680,10 +729,10 @@ get_binfiles:
   | Function:  Fills the global binfiles. stem with all        |
   |            current repo files that are added as binary.    |
   \---------------------------------------------------------- */
-  cmd = 'cd' ckotdir'/ &&'
-  cmd = 'cat -W filecodeset=UTF-8,pgmcodeset=IBM-1047' ckotdir'/.gitattributes'
-  cmd = cmd ' | grep BINARY'
-  cmd = cmd '| cut -d" " -f1'
+  cmd = 'cd' ckotdir'/ &&' ,
+        'cat -W filecodeset=UTF-8' ckotdir'/.gitattributes' ,
+        ' | grep BINARY' ,
+        '| cut -d" " -f1'
   x = docmd(cmd)
   if so.0 = 0 then do
     binfiles.0 = 0
@@ -720,6 +769,178 @@ docmd:
   x = bpxwunix(cmd,,so.,se.,env.)
   return x
 
+ChkIfFile:
+  /* -------------------------------------------- *
+  | Check if a file is a regular file            |
+  | rc 0  it is not                              |
+  | rc 1  it is                                  |
+  * -------------------------------------------- */
+  parse arg _file
+  Address SYSCALL "lstat" _file "_stat."
+  if _stat.0 < 1 | _stat.ST_TYPE <> S_ISREG then
+    return 0
+  else
+    return 1
+
+ChkIfDir:
+  /* -------------------------------------------- *
+  | Check if a file is a directory               |
+  | rc 0  it is not                              |
+  | rc 1  it is                                  |
+  * -------------------------------------------- */
+  parse arg _file
+  Address SYSCALL "lstat" _file "_stat."
+  if _stat.0 < 1 | _stat.ST_TYPE <> S_ISDIR then
+    return 0
+  else
+    return 1
+
+ChkIfEBC:
+  /* -------------------------------------------- *
+  | Check if a file's CCSID is IBM1047 or not    |
+  | rc 0  it is not                              |
+  | rc 1  it is                                  |
+  * -------------------------------------------- */
+  parse arg _file
+  Address SYSCALL "lstat" _file "_stat."
+  if _stat.0 < 1 | _stat.ST_TYPE <> S_ISREG then
+    return 0
+  else
+    if substr(_stat.ST_CCSID, 1, 2) = '0417'X then
+      return 1
+    else
+      return 0
+
+SayErrors:
+  /* -------------------------------------------- *
+  | Display STDOUT and STDERR from a command     |
+  | when the command failed for some reason      |
+  * -------------------------------------------- */
+  parse arg _emsg
+  say _emsg
+  say ' '
+  say 'Standard messages:'
+  say ' '
+  do vs = 1 to so.0;say so.vs;end
+  say ' '
+  say 'Error messages:'
+  say ' '
+  do vs = 1 to se.0;say se.vs;end
+  return
+
+CvtToEBC:
+  /* -------------------------------------------- *
+  | Convert a file to IBM1047 encoding           |
+  | rc 0  it was successfully converted          |
+  | rc <> 0 an error occurred, see output msgs   |
+  * -------------------------------------------- */
+  parse arg _file
+  _febc = _file".ebc"
+  _rc = docmd("/bin/iconv -f ISO8859-1 -t IBM-1047" _file ">" _febc)
+  if _rc > 0 then do
+    SayErrors("Conversion of" _file "failed with RC="_rc)
+    return _rc
+  end
+  _rc = docmd("rm -f" _file)
+  if _rc > 0 then do
+    SayErrors("Removal of" _file "failed with RC="_rc)
+    return _rc
+  end
+  _rc = docmd("mv" _febc _file)
+  if _rc > 0 then do
+    SayErrors("Rename of" _febc "failed with RC="_rc)
+    return _rc
+  end
+  _rc = docmd("chtag -tc IBM1047" _file)
+  if _rc > 0 then do
+    SayErrors("Tagging of" _file "failed with RC="_rc)
+    return _rc
+  end
+  return 0
+
+ChkIfGIT:
+  /* -------------------------------------------- *
+  | ChkIfGIT to convert unzipped git zip files   |
+  | to IBM-1047 encoding according to the rules  |
+  | listed in the .gitattributes file            |
+  | rc 0  FIles needed and were converted        |
+  | rc 4  FIles do not need conversion           |
+  | rc 8  Files needed to perform the conversion |
+  |       are missing                            |
+  | Other rc <> 0 Return code from the           |
+  |       conversion process                     |
+  * -------------------------------------------- */
+  /* Get output top directory for conversion */
+  parse arg outdir
+  parse value '' with null /* Needed by zmsg */
+  call zmsg " "
+  if ChkIfDir(outdir"/.git") = 0 then do
+    call zmsg "This appears to be a manually unzipped directory"
+    call zmsg "Checking if all required conversion tools are here"
+  end
+  else do
+    call zmsg "This appears to be a git-created directory"
+    call zmsg "No encoding conversion is required"
+    return 4
+  end
+  if ChkIfFile(outdir"/.gitattributes") = 0 then do
+    call zmsg "There is no .gitattributes file in this directory"
+    call zmsg "Please re-download and rerun"
+    return 8
+  end
+  if ChkIfFile(outdir"/zgcvtenc.awk") = 0 then do
+    call zmsg "Conversion script zgcvtenc.awk not found"
+    call zmsg "Please re-download and rerun"
+    return 8
+  end
+  if ChkIfEBC(outdir"/zgcvtenc.awk") = 1 then do
+    call zmsg "Files appear to already have been converted to EBCDIC"
+    call zmsg "Please continue with the normal installation procedure"
+    return 4
+  end
+  call zmsg " "
+  call zmsg "Conversion tools and files seem to all be present"
+  call zmsg "Files in this unzipped directory will be converted"
+  call zmsg "as specified by the rules in the .gitattributes file"
+  call zmsg " "
+  /* Save the current Address mode */
+  saveAddr = address()
+  /* Switch to SHell mode for necessary tasks */
+  Address SH
+  /* Remove output files for the zgcvtenc process */
+  rmlist = outdir"/zgcvtenc.err" outdir"/zgcvtenc.log"
+  rmlist = rmlist outdir"/zgcvtenc.lst"  outdir"/zgcvtenc.dbglog"
+  rmlist = rmlist  outdir"/.gitattributes.ebc"
+  "rm -f" rmlist
+  /* Create list of files for script zgcvtenc.awk to process */
+  "ls -RFA1 >" outdir"/zgcvtenc.lst"
+  /* POSIX awk requires scripts to be encoded in EBCDIC */
+  rc = CvtToEBC(outdir"/zgcvtenc.awk")
+  /* -------------------------------------------------------- *
+  | The script zgcvtenc.awk requires file .gitattributes.ebc |
+  | to be a copy of .gitattributes encoded as IBM-1047 text  |
+  | The original ASCII .gitattributes file is not changed    |
+  * -------------------------------------------------------- */
+  "cp" outdir"/.gitattributes" outdir"/.gitattributes.ebc"
+  rc = CvtToEBC(outdir"/.gitattributes.ebc")
+  /* Must add a final pattern to .gitattributes to ignore *ccsid* files */
+  "echo ""*cvtenc* binary"" >>"  outdir"/.gitattributes.ebc"
+  /* The script zgcvtenc.awk requires environment variable PWD */
+  nextenvc = env.0 + 1
+  env.nextenvc = "PWD="outdir
+  env.0 = nextenvc
+  /* Now we are ready to run the conversion process */
+  rc = docmd("awk -f" outdir"/zgcvtenc.awk" outdir"/zgcvtenc.lst >" ,
+       outdir"/zgcvtenc.log 2>" outdir"/zgcvtenc.err")
+  call zmsg "Return code from conversion process is" rc
+  call zmsg " "
+  /* Restore original Address and environment settings*/
+  Address value saveAddr
+  env.nextenvc = ""
+  env.0 = nextenvc - 1
+  /* Exit with return code from conversion process */
+  return rc
+
 /*
 >ZGSTAT     *** Inline ZGSTAT that will be updated and uploaded */
   /*---------------------  rexx procedure  -------------------- *
@@ -738,6 +959,7 @@ docmd:
   | Author:    Lionel B. Dyck                                  |
   |                                                            |
   | History:  (most recent on top)                             |
+  |            11/05/24 LBD - Support 8 char userids           |
   |            06/11/20 LBD - Put inline in zginstall.rex      |
   |            06/10/20 LBD - Usability enhancements           |
   |            06/09/20 LBD - Creation                         |
@@ -763,9 +985,19 @@ docmd:
   |    <https://www.gnu.org/licenses/>.                        |
   * ---------------------------------------------------------- */
 
-/* ------------------------------------------------ *
- | These variables will be updated by zginstall.rex |
- * ------------------------------------------------ */
+ /* ------------------------------*
+  | Check to see if we're in ISPF |
+  * ----------------------------- */
+
+  parse source . . . . s5 . . s8 .
+  if s8 /= 'ISPF' then do
+     say s5 'must be run under ISPF'
+     exit 8
+  end /* if s8 */
+
+ /* ------------------------------------------------ *
+  | These variables will be updated by zginstall.rex |
+  * ------------------------------------------------ */
   repodir = '$$$$$$'
   hlq     = '$$$$$$'
 
@@ -809,6 +1041,15 @@ Done:
   zedlmsg = 'ZGSTAT completed ISPF statistics updates.'
   'setmsg msg(isrz001)'
   exit 0
+
+  /* ---------------------- *
+   | ISPF Stat Userid Setup |
+   * ---------------------- */
+zlmmuser: procedure
+   arg uid
+   if length(uid) > 7
+      then return 'user8('uid')'
+      else return 'user('uid')'
 
 Cancel:
   x = dropispf(load_info)
@@ -1003,7 +1244,7 @@ $repodir                                                      +
   * ---------------------------------------------------------- */
 zigistat:
 
-  /* --------------- *
+ /* --------------- *
   | Define defaults |
   * --------------- */
   parse value '' with null string m. rx allmems codep
@@ -1121,7 +1362,7 @@ zigistat:
         if sysrecfm /= 'U' then
         if zlcdate = null then
         if readonly = 0 then do
-          'LMMSTATS DATAID('status') Member('member') user('newuid')'
+          'LMMSTATS DATAID('status') Member('member')' zlmmuser(newuid)
           "LMMFind DATAID("status") Member("member") STATS(YES)"
         end
         /* ------------------------------ *
@@ -1218,12 +1459,13 @@ zigistat:
           if statmems /= null then
           if wordpos(member,statmems) = 0 then iterate
           if zlcdate = null then ,
-            'LMMSTATS DATAID('zstats') Member('member') user('sysvar(sysuid)')'
+            'LMMSTATS DATAID('zstats') Member('member')',
+             zlmmuser(sysvar(sysuid))
           else ,
             'LMMSTATS DATAID('zstats') MEMBER('member') VERSION('zlvers')' ,
             'MODLEVEL('zlmod') CREATED('zlcdate') MODDATE('zlmdate')' ,
             'MODTIME('zlmtime') INITSIZE('zlinorc')' ,
-            'MODRECS('zlmnorc') USER('zluser')'
+            'MODRECS('zlmnorc')' zlmmuser(zluser)
         end
         "LMClose Dataid("zstats")"
         "LMFree  Dataid("zstats")"
@@ -1363,9 +1605,9 @@ Update_Member_ISPF_Stats:
     parse value mem.actmem with cdt mdt mtm uid
     if uid /= null then
     'LMMSTATS DATAID('zstats') Member('actmem') Created('cdt')',
-           'Moddate('mdt') Modtime('mtm') User('uid')'
+           'Moddate('mdt') Modtime('mtm')' zlmmuser(uid)
     else
-    'LMMSTATS DATAID('zstats') Member('actmem') User('userid()')'
+    'LMMSTATS DATAID('zstats') Member('actmem')' zlmmuser(userid())
     "LMClose Dataid("zstats")"
     "LMFree  Dataid("zstats")"
    return
@@ -1402,8 +1644,9 @@ GETENV:
   envc = env.0
   call add_env '_BPX_SHAREAS=MUST'
   call add_env '_BPX_SPAWN_SCRIPT=YES'
-  call add_env 'EXPORT _EDC_ADD_ERRNO2=1'
+  call add_env '_EDC_ADD_ERRNO2=1'
   call add_env '_EDC_ZERO_RECLEN=Y'
+  call add_env 'ICONV_EBCDIC_ZOS_UNIX=1'
   env.0 = envc
 
 docmdx:
