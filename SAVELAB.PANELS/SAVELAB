@@ -2,7 +2,8 @@
  $ type(input) hilite(uscore) caps(off)
  + type(text) skip(off) intens(low)
  [ type(ps)
-)Body Window(63,12)
+)Body Window(63,13)
++
 %Command ===>_zcmd
 +
 [Export+   Export Labels (dsname required)

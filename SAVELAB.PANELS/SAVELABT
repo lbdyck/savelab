@@ -4,7 +4,8 @@
  # type(output) caps(off) intens(low)
  { type(output) pas(on) intens(low)  hilite(uscore) caps(off)
  } type(output) pas(on) intens(high)  hilite(uscore) caps(off)
-)Body Window(66,16)
+)Body Window(66,17)
++
 %Command ===>_zcmd                                         $zcsr+
 +
 +Command:}Sort+(Label)}SortR+(Record) Select:%S+or%Enter+
