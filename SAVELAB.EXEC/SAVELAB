@@ -251,6 +251,9 @@
   *            07/01/03 - Creation                             *
   *                                                            *
   * ---------------------------------------------------------- */
+
+ /*%Copyright (C) 2003-2025 by Lionel B. Dyck. All rights reserved.*/
+
   Arg Parms
 
   parse value '' with null free_labset quiet imac external sclm tbopen
