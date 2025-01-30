@@ -1,5 +1,5 @@
   /* --------------------  rexx procedure  -------------------- */
-  ver = "2.21"
+  ver = "2.22"
   /* Name:      SAVELAB                                         *
   *                                                            *
   * Type:      ISPF Edit Macro                                 *
@@ -50,6 +50,7 @@
   *            NORESET  - Restore but no reset and quiet       *
   *            QUIET    - do not report if no labels avail     *
   *                       but will enable automatic saving     *
+  *            RESTORE  - Restore labels (same as blank)       *
   *            SAVE     - save all labels                      *
   *            SHOW     - alias of LIST                        *
   *            SHOWALL  - display the ISPF table               *
@@ -112,6 +113,13 @@
   * Author:    Lionel B. Dyck                                  *
   *                                                            *
   * History:                                                   *
+  *            01/29/25 - 2.22 by Ray Mullins                  *
+  *                     - Correct check for PF3 from SAVELAB   *
+  *                       popup panel                          *
+  *                     - NORESET and IMAC caused early exit   *
+  *                     - Add RESTORE keyword for symmetry     *
+  *                       with SAVE (essentially the default)  *
+  *                     - Add indicator that table is open     *
   *            07/12/23 - 2.21 by Lionel Dyck                  *
   *                     - Allow no parm - default to restore   *
   *                       broke with 2.20                      *
@@ -243,9 +251,12 @@
   *            07/01/03 - Creation                             *
   *                                                            *
   * ---------------------------------------------------------- */
+
+ /*%Copyright (C) 2003-2025 by Lionel B. Dyck. All rights reserved.*/
+
   Arg Parms
 
-  parse value '' with null free_labset quiet imac external sclm
+  parse value '' with null free_labset quiet imac external sclm tbopen
   export  = 0
   noreset = 0
 
@@ -302,6 +313,7 @@
       'write library(ispprof) share'
     call convert_table
   end
+  tbopen = 1
 
   /* ------------------------------ *
   * Process the Edit Macro options *
@@ -311,7 +323,7 @@
     'display panel(savelab)'
     drc = rc
     'rempop'
-    if rc > 0 then call close_out
+    if drc > 0 then call close_out
     option = zcmd hiden
     if wordpos(zcmd,'EXPORT IMPORT') > 0 then do
       'addpop row(4) column(4)'
@@ -366,7 +378,11 @@
     When abbrev("NORESET",option,1) = 1 then do
       noreset = 1
       quiet = 1
+      option = strip(delword(option,1,1))
     end
+
+    When abbrev("RESTORE",word(option,1),1) = 1 then
+      option = strip(delword(option,1,1))
 
     When abbrev("SHOW",word(option,1),2) = 1 then
     call do_show
@@ -377,6 +393,7 @@
     When abbrev("IMAC",option,1) = 1 then do
       imac = 1
       quiet = 1
+      option = strip(delword(option,1,1))
     end
 
     When abbrev("WHY",option,1) = 1 then
@@ -407,24 +424,24 @@ Do_Restore:
   end
   if noreset = 1 then saverest = 1
   if changed = 'YES' then
-  if rest_opt = null then
-  if saverest = null then do
-    Address ISPExec
-    'addpop row(4) column(4)'
-    'display panel(savelabq)'
-    drc = rc
-    'rempop'
-    Address ISREdit
-    if rans = 'N' then drc = 4
-    if drc > 0 then call close_out
-  end
+    if rest_opt = null then
+      if saverest = null then do
+        Address ISPExec
+        'addpop row(4) column(4)'
+        'display panel(savelabq)'
+        drc = rc
+        'rempop'
+        Address ISREdit
+        if rans = 'N' then drc = 4
+        if drc > 0 then call close_out
+      end
   ropt = word(option,2)
   if quiet = 1 then ropt = null
   '(loc) = cursor'
   if ropt = null then
-  if noreset = 0
-  then if sclm = null
-  then "Reset All"
+    if noreset = 0 then
+      if sclm /= 'SCLM' then
+        "Reset All"
   address ispexec
   'tbtop savelab'
   ours = null
@@ -469,8 +486,9 @@ Do_Restore:
   | Close and Exit |
   * -------------- */
 Close_Out:
-  Address ISPExec ,
-  'tbclose savelab replcopy library(ispprof)'
+  if tbopen = 1 then
+    Address ISPExec ,
+      'tbclose savelab replcopy library(ispprof)'
   exit 1
 
   /* -------------------------------- *

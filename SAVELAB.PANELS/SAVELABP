@@ -4,7 +4,8 @@
  # type(output) caps(off) intens(low)
  { type(output) pas(on) intens(low)  hilite(uscore) caps(off)
  } type(output) pas(on) intens(high)  hilite(uscore) caps(off)
-)Body Window(58,5)
+)Body Window(58,6)
++
 +Delete saved labels for:
 @dsnmem
 +
